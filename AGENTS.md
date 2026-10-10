@@ -68,3 +68,6 @@ Notation : implémentation technique 35, sécurité & design de garde 20, faisab
   - Utile pour Jalon 2 : branche `origin/feat/example_guardian_recovery` dans `passkey-tutorial` (exemple de récupération par gardiens) ; autres : `multichain/completed`, `deployed`.
   - À tester : Register (Touch ID) → Send UserOp (mint gasless Sepolia). Pas encore confirmé.
   - Git : dépôt unique à la racine `hackathonBSA/`, remote `https://github.com/Moussa-dme/swissquote-wallet.git` (privé, README initial déjà sur GitHub). `.git` hérité de ZeroDev supprimé dans `passkey-tutorial/`. `.env.local` jamais commité. Le binôme doit être ajouté en collaborateur (Settings → Collaborators).
+  - Fait : premier push GitHub réussi (sam. ~11h55). Auth = Personal Access Token classique (scope `repo`) ; ne jamais le mettre dans le chat ni dans Git. Ensuite, pour envoyer : `git add -A && git commit -m "..." && git push`.
+  - Bloquant Jalon 1 : « Send UserOp » → alerte « HTTP request failed ». Bundler testé OK avec curl (eth_chainId, EntryPoint 0.7, CORS OK). Alerte détaillée ajoutée (`describeError` dans page.tsx) ; en attente du texte complet de l'alerte. Pistes : paymaster / Gas Policy du dashboard, ou requête bloquée côté navigateur.
+
