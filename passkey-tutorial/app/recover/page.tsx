@@ -37,8 +37,10 @@ export default function RecoverPage() {
         if (!username) return
         const r = await coord(`state?username=${encodeURIComponent(username)}`)
         if (r.ok) setState(r.data)
-        const caseId = ls.get(`sq-recover-case-${username}`)
-        if (caseId) { try { const c = await fetch(`${SWISSQUOTE_URL}/cases/${caseId}`).then((x) => x.json()); if (!c.error) setCaseInfo(c) } catch {} }
+        const rid = ls.get(`sq-recover-req-${username}`)
+        const caseId = rid ? ls.get(`sq-recover-case-${rid}`) : ""
+        if (!caseId) { setCaseInfo(null); return }
+        try { const c = await fetch(`${SWISSQUOTE_URL}/cases/${caseId}`).then((x) => x.json()); setCaseInfo(c.error ? null : c) } catch {}
     }, [username])
     useEffect(() => { refresh(); const t = setInterval(refresh, 2500); return () => clearInterval(t) }, [refresh])
 
@@ -71,7 +73,7 @@ export default function RecoverPage() {
         try {
             const r = await api(`${SWISSQUOTE_URL}/cases`, { username, account: setup.account })
             if (!r.ok) throw new Error(r.data.error)
-            ls.set(`sq-recover-case-${username}`, r.data.id); setCaseInfo(r.data)
+            ls.set(`sq-recover-case-${req.id}`, r.data.id); setCaseInfo(r.data)
             setSqMsg({ kind: "info", text: `Dossier ${r.data.id} ouvert. Présente-toi à l'agence (page /desk, simulée) avec ta pièce d'identité.` })
         } catch (e) { setSqMsg({ kind: "err", text: "Serveur Swissquote injoignable : " + errText(e) + " (est-il lancé sur le port 4000 ?)" }) }
         setBusy("")
@@ -137,7 +139,7 @@ export default function RecoverPage() {
                 </Card>
 
                 <Card title="2. Nouveau passkey sur cet appareil">
-                    {!req && <Btn onClick={start} busy={busy === "start"} disabled={!setup}>Créer un nouveau passkey et demander la récupération</Btn>}
+                    {(!req || req.status !== "pending") && <Btn onClick={start} busy={busy === "start"} disabled={!setup}>{req ? "Faire une NOUVELLE demande de récupération (nouveau passkey)" : "Créer un nouveau passkey et demander la récupération"}</Btn>}
                     {req && (
                         <>
                             <p className="text-sm">Demande <b>{req.id}</b> — statut : <b>{req.status === "pending" ? "en cours" : req.status === "executed" ? "exécutée ✅" : "annulée ❌"}</b></p>
