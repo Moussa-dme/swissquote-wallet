@@ -56,10 +56,15 @@ Un voleur qui a le téléphone et sa biométrie n'a pas le second appareil. **Li
 - **Limites** : délai appliqué hors chaîne (production : `TimelockPolicy` sur la blockchain) ; clés des deux gardiens du client dans le navigateur (production : passkey ou clé physique).
 
 ## 7. Garde et Travel Rule
-Voir [`LEGAL.md`](LEGAL.md) (squelette à compléter). Faits : Swissquote ne détient aucune clé et ne peut pas, seule, déplacer les fonds ; elle n'a aucun pouvoir de blocage (elle **avertit**) ; elle vérifie la propriété du wallet par signature avant tout retrait vers un wallet externe.
+Détail et sources : [`LEGAL.md`](LEGAL.md).
+- **Garde** : selon la pratique de la FINMA rapportée par des cabinets d'avocats, un wallet est non-custodial si le prestataire n'a aucun pouvoir de disposition sur les clés ni sur les actifs et n'influence pas les transactions. Chez nous : **aucune clé** côté Swissquote, **1 voix sur 3 seulement** dans la récupération, **aucun pouvoir de blocage** (elle avertit), et le client peut récupérer **sans elle**. Le wallet est donc plus proche d'un **logiciel** que d'une garde. La **zone grise** (Swissquote + un autre gardien) est reconnue, atténuée, et supprimable par une variante stricte.
+- **Travel Rule** : la guidance FINMA 02/2019 exige de vérifier la propriété d'un wallet externe par des « moyens techniques appropriés ». Notre wallet le fait **automatiquement** : signature d'un message unique, **vérifiée sur la blockchain** (ERC-1271), avant tout retrait de la banque. Quand le client paie un tiers depuis son wallet, la banque n'intervient pas (comparaison du distributeur de billets, donnée par le mentor).
+- *Rappel : ce n'est pas un avis juridique ; les points signalés sont à vérifier sur les textes officiels.*
 
 ## 8. Business case
-Voir [`BUSINESS.md`](BUSINESS.md) (squelette à compléter). Idées des mentors : service de récupération payant, pourcentage des actifs sous garde, abonnement « gas station » ; critère clé : ratio bénéfice / risque ; pas d'assurance ; facilité d'implémentation.
+Détail, sources et modèle d'hypothèses : [`BUSINESS.md`](BUSINESS.md).
+
+Swissquote perd aujourd'hui les clients qui veulent le self-custody. Notre wallet leur permet de **garder leurs clés tout en restant clients**. Le marché existe (23 % des Suisses possèdent des cryptos selon Bitpanda / YouGov 2024), mais 80 à 90 % des clients de la banque ne connaissent pas les wallets : c'est une **option complémentaire**. Les revenus viennent de la **rétention**, d'un **service de récupération payant** et d'un **abonnement « gas station »** ; un pourcentage des actifs seul est négligeable (à 0,01 %, 500 CHF par an pour 1 000 clients à 5 000 CHF, selon nos hypothèses). Les coûts sont maîtrisés : **pas d'assurance**, gas plafonné, développement léger car **aucune cryptographie ni contrat maison**. **Risque faible** : la banque n'a aucune clé et ne peut rien déplacer seule.
 
 ## 9. Bonus traités
 | Bonus | État |
