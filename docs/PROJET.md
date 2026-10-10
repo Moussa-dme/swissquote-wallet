@@ -27,6 +27,8 @@ Mode d'emploi pas à pas : [`DEMARRAGE.md`](DEMARRAGE.md).
 **Avantages** : la banque ne détient aucune clé ; une seule voix de la banque ne suffit pas ; la récupération marche sans la banque ; briques existantes (aucune cryptographie maison) ; simple pour le client (Touch ID).
 **Inconvénients** : EVM seulement ; dépendance à un fournisseur de comptes intelligents ; zone grise si Swissquote et un autre gardien s'allient (voir `MENACE.md` 3.1).
 
+**Choix assumé : tous les gardiens pèsent pareil (2 voix sur 3).** Un client qui a tout perdu peut ainsi récupérer avec son contact et Swissquote après vérification en personne (le « pire cas » décrit par le mentor). Le prix est la zone grise « Swissquote + un autre gardien », atténuée par la vérification en personne, le délai, l'alerte et l'annulation. Un mode « haute sécurité » où Swissquote ne peut aider **qu'avec l'appareil du client** est décrit comme variante configurable (non implémentée).
+
 ## 2. Modèle de menace
 Résumé : un voleur de téléphone est limité aux petits montants ; un attaquant qui a le numéro et l'e-mail est **refusé** par Swissquote (vérification en personne) ; Swissquote seule ne peut ni payer ni changer la clé. Les trois questions du brief (qui peut voler, qui peut verrouiller, Swissquote seule ou avec un partenaire) sont traitées dans [`MENACE.md`](MENACE.md), **avec les limites assumées**.
 

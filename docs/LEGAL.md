@@ -25,7 +25,7 @@
 Dans la version actuelle, Swissquote **et** le contact de confiance (2 voix sur 3) pourraient remplacer la clé du client **sans lui**.
 - **Pour que ce ne soit pas de la garde** : le contact est **choisi par le client** ; Swissquote n'agit qu'après une **vérification d'identité en personne** ; un **délai** laisse au client le temps d'être alerté et d'**annuler** ; la banque ne peut **jamais agir seule**.
 - **Contre** : deux tiers, dont la banque, pourraient agir sans le client ; la qualification peut dépendre de l'influence réelle, y compris contractuelle.
-- **Variante stricte** (une ligne de configuration) : Swissquote n'aide **qu'avec l'appareil du client**. Cela **supprime la zone grise**, au prix d'une récupération plus difficile si le client perd tous ses appareils (voir `MENACE.md` 3.1). **Décision à prendre et à justifier.**
+- **Variante stricte** (une ligne de configuration) : Swissquote n'aide **qu'avec l'appareil du client**. Cela **supprime la zone grise**, au prix d'une récupération plus difficile si le client perd tous ses appareils (voir `MENACE.md` 3.1). **Décision prise : on garde la version actuelle (option 1)**, car elle permet à un client qui a tout perdu de récupérer avec le contact et Swissquote après vérification en personne, ce que le mentor a décrit comme le « pire cas » acceptable. La variante stricte reste un **mode « haute sécurité »** configurable, non implémenté.
 
 ## 2. Travel Rule et vérification de propriété du wallet
 
