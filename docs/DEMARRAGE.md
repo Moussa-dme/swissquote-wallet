@@ -238,6 +238,25 @@ Sur la page d'accueil (navigateur A, wallet connecté), dans **« ▼ Mode avanc
 
 ---
 
+## 6 quater. Scénario G : applications (dApps) approuvées et code vérifié
+
+*Montre l'« interaction conforme » : liste approuvée par Swissquote, vérification du code du contrat, simulation, contrôle renforcé.*
+
+Sur la page d'accueil (wallet connecté), dans **« ▼ Mode avancé »**, carte **« Applications (dApps) : liste approuvée et contrôle du code »** :
+1. Laisse **« ✅ Démo NFT (ZeroDev) »** et clique sur **Vérifier l'application**. Tu vois : approuvée **oui ✅**, code identique **oui ✅**, simulation **réussirait ✅**, et un résumé clair. Clique sur **Appeler l'application (Touch ID)** : un seul contrôle suffit.
+2. Ouvre `http://localhost:3000/desk`, carte **« Registre des applications approuvées »**, et clique sur **Simuler une mise à jour du contrat** (c'est la simulation d'un contrat dont le code change alors que l'adresse reste la même).
+3. Reviens dans le wallet, reclique sur **Vérifier l'application** : « Code identique : **NON ⛔** » et **« Appel bloqué par ton wallet »**. Sur `/desk`, clique ensuite sur **Rétablir**.
+4. Choisis **« Autre application »**, colle l'adresse d'un contrat quelconque (par exemple celle de l'USDC de test : `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238`) et clique sur **Vérifier** : « Approuvée : non ⚠️ ». *(La simulation échouera probablement, car ce contrat n'a pas de fonction `mint` : c'est normal et c'est ce que le contrôle doit montrer.)*
+
+## 6 quinquies. Scénario H : frais pris en charge et anti-abus (gas station)
+
+*Montre qui paie les frais et comment l'abus est évité.*
+- Dans le **résumé d'un paiement** (« Envoyer des USDC » → **Vérifier**), la ligne « Frais de réseau » affiche **« opérations gratuites aujourd'hui : x/40 »** : chaque wallet a un quota quotidien de transactions sponsorisées.
+- En plus : un **plafond global** par jour (tous clients) et un **plafond de gaz par opération**. Une demande au-delà est refusée avec un message clair (« Quota de transactions gratuites atteint… »).
+- Pour voir les compteurs : `http://localhost:3000/api/gas/usage?address=<adresse du wallet>`.
+
+---
+
 ## 7. Ce que tu dois observer (pour le pitch et le produit)
 
 Pendant que tu testes, note :
@@ -260,6 +279,8 @@ Pendant que tu testes, note :
 | Vérification d'identité en agence (KYC) | **MOCK** : la page `/desk` joue l'agent |
 | Contrôle petit / gros montant (confirmation du second appareil) | **Appliqué par l'app et le coordinateur** (simulation) ; en production : on-chain |
 | Compte Swissquote (numéro de client + mot de passe) et retrait vers un wallet | **MOCK** : base inventée ; la vérification de la signature du wallet, elle, est **réelle** (sur la blockchain) |
+| Registre des dApps approuvées (adresse + empreinte du code) | **MOCK** : une dApp de démonstration ; la vérification de l'empreinte par le wallet est **réelle** (sur la blockchain) |
+| Gas station (quotas de frais) | **MOCK** : service de l'app ; le paymaster ZeroDev, lui, est réel |
 | Contrôle des adresses destinataires (adresses signalées) | **MOCK** : liste inventée dans le faux serveur Swissquote ; avertit, ne bloque pas |
 | USDC de test | **Réel** sur Sepolia (jeton de test Circle, sans valeur) |
 | Délai de sécurité annulable | **Appliqué hors chaîne** (par notre coordinateur) : limite à expliquer ; en production, un délai sur la blockchain |

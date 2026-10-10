@@ -15,7 +15,7 @@
 import http from "node:http"
 import fs from "node:fs"
 import crypto from "node:crypto"
-import { createPublicClient, http as viemHttp, encodeFunctionData, parseAbi, isAddress, isAddressEqual } from "viem"
+import { createPublicClient, http as viemHttp, encodeFunctionData, parseAbi, isAddress, isAddressEqual, keccak256, toHex } from "viem"
 import { sepolia } from "viem/chains"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { createKernelAccount, createZeroDevPaymasterClient } from "@zerodev/sdk"
@@ -55,6 +55,21 @@ if (!db.customers) {
     save(db)
 }
 db.links ??= {} // liaisons client -> wallets dont la propriété a été prouvée
+
+// MOCK : registre des dApps approuvées par Swissquote. Pour chaque application : son adresse ET l'empreinte
+// (keccak256) de son code au moment de l'approbation. Le wallet recalcule l'empreinte sur la blockchain avant
+// de signer : si le code a changé depuis l'approbation, l'adresse seule ne suffit plus (idée d'un étudiant
+// du hackathon, saluée par le mentor : un contrat modifiable garde la même adresse).
+const DEMO_NFT = "0x34bE7f35132E97915633BC1fc020364EA5134863"
+db.dapps ??= {}
+if (!db.dapps["demo-nft"]) {
+    const code = await publicClient.getCode({ address: DEMO_NFT })
+    if (code) {
+        const hash = keccak256(code)
+        db.dapps["demo-nft"] = { id: "demo-nft", name: "Démo NFT (ZeroDev)", description: "Crée un jeton de test gratuit (fonction mint). Aucune valeur, aucun fonds ne quitte le wallet.", address: DEMO_NFT, codeHash: hash, originalHash: hash, approvedAt: Date.now() }
+        save(db)
+    }
+}
 const sessions = new Map() // jeton -> { customer, exp }
 const challenges = new Map() // nonce -> { customer, address, message, exp }
 const sessionOf = (token) => { const x = sessions.get(token); return x && x.exp > Date.now() ? x : null }
@@ -108,6 +123,22 @@ const routes = {
     "GET /screen/:address": async (_b, p) => {
         const reason = FLAGGED[String(p.address).toLowerCase()]
         return [200, { address: p.address, flagged: Boolean(reason), reason: reason ?? null, mock: true }]
+    },
+
+    // ----- Registre des dApps approuvées (bonus « interaction conforme ») -----
+    "GET /dapps": async () => [200, { dapps: Object.values(db.dapps), mock: true }],
+    // MOCK de l'agent : simule une mise à jour du contrat (on ne peut pas modifier un vrai contrat pour la démo)
+    "POST /desk/dapps/:id/simulate-update": async (_b, p) => {
+        const d = db.dapps[p.id]
+        if (!d) return [404, { error: "dApp inconnue" }]
+        d.codeHash = keccak256(toHex("mise à jour simulée " + Date.now())); save(db)
+        return [200, d]
+    },
+    "POST /desk/dapps/:id/reset": async (_b, p) => {
+        const d = db.dapps[p.id]
+        if (!d) return [404, { error: "dApp inconnue" }]
+        d.codeHash = d.originalHash; save(db)
+        return [200, d]
     },
 
     // ----- Compte Swissquote et liaison avec le wallet (sujet 3 du brief + Travel Rule) -----

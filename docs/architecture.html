@@ -18,11 +18,13 @@
         DESK[&quot;Guichet d&#x27;agence&lt;br/&gt;/desk&lt;br/&gt;agent simulé&quot;]:::mock
     end
 
+    GAS[&quot;Gas station&lt;br/&gt;routes /api/gas&lt;br/&gt;quotas anti-abus avant le paymaster&quot;]:::mock
+
     COORD[&quot;Coordinateur de récupération&lt;br/&gt;routes /api/recovery&lt;br/&gt;relaie les approbations&lt;br/&gt;applique le délai annulable&quot;]:::mock
 
     subgraph SQ[&quot;Faux serveur Swissquote — processus séparé, port 4000, stockage propre&quot;]
         SQG[&quot;Gardien n°3 : 1 voix sur 3&lt;br/&gt;signe après vérification en personne&quot;]:::mock
-        SQB[&quot;Comptes clients, KYC en agence,&lt;br/&gt;contrôle d&#x27;adresses, liaison wallet,&lt;br/&gt;retraits (Travel Rule)&quot;]:::mock
+        SQB[&quot;Comptes clients, KYC en agence,&lt;br/&gt;contrôle d&#x27;adresses, registre de dApps approuvées,&lt;br/&gt;liaison wallet, retraits (Travel Rule)&quot;]:::mock
     end
 
     ZD[&quot;ZeroDev (cloud)&lt;br/&gt;serveur de passkeys&lt;br/&gt;bundler · paymaster (frais payés)&quot;]:::ext
@@ -34,6 +36,8 @@
         USDC[&quot;USDC de test (Circle)&quot;]:::real
     end
 
+    OWNER --&gt;|&quot;frais à sponsoriser&quot;| GAS
+    GAS --&gt;|&quot;si quota respecté&quot;| ZD
     OWNER --&gt;|&quot;passkey, transactions&quot;| ZD
     NEWDEV --&gt;|&quot;nouveau passkey&quot;| ZD
     ZD --&gt;|&quot;opérations utilisateur&quot;| ACCOUNT
@@ -114,6 +118,28 @@
     SQ--&gt;&gt;Client: wallet lié et propriété prouvée
     Note over SQ: un retrait depuis le compte Swissquote&lt;br/&gt;n&#x27;est autorisé QUE vers un wallet dont la propriété est prouvée
 </pre>
-<h2>6. Ce qui est réel, ce qui est simulé</h2>
+<h2>6. Interaction avec une dApp (bonus)</h2>
+<pre class="mermaid">flowchart TB
+    classDef real fill:#bbf7d0,stroke:#15803d,color:#052e16
+    classDef mock fill:#fde68a,stroke:#b45309,color:#451a03
+    classDef bad fill:#fecaca,stroke:#b91c1c,color:#450a0a
+    A[&quot;Le client veut appeler une application&quot;]:::real --&gt; R[&quot;Registre des dApps approuvées&lt;br/&gt;adresse + empreinte du code (Swissquote, MOCK)&quot;]:::mock
+    A --&gt; H[&quot;Le wallet recalcule l&#x27;empreinte du code&lt;br/&gt;directement sur la blockchain&quot;]:::real
+    R --&gt; C{&quot;Approuvée ET code identique ?&quot;}
+    H --&gt; C
+    C --&gt;|&quot;oui&quot;| T[&quot;Simulation + résumé en langage clair&lt;br/&gt;puis Touch ID seul&quot;]:::real
+    C --&gt;|&quot;application inconnue&quot;| W[&quot;Case à cocher + confirmation&lt;br/&gt;de l&#x27;appareil de secours&quot;]:::real
+    C --&gt;|&quot;même adresse, code changé&quot;| X[&quot;Appel bloqué par le wallet&quot;]:::bad
+</pre>
+<h2>7. Frais sponsorisés : la « gas station »</h2>
+<pre class="mermaid">flowchart LR
+    classDef real fill:#bbf7d0,stroke:#15803d,color:#052e16
+    classDef mock fill:#fde68a,stroke:#b45309,color:#451a03
+    classDef ext fill:#bfdbfe,stroke:#1d4ed8,color:#172554
+    APP[&quot;App du client&quot;]:::real --&gt;|&quot;demande de sponsoring&quot;| G[&quot;Gas station (MOCK)&lt;br/&gt;1. quota par wallet et par jour&lt;br/&gt;2. plafond global quotidien&lt;br/&gt;3. plafond de gaz par opération&lt;br/&gt;4. seule méthode autorisée : sponsoriser&quot;]:::mock
+    G --&gt;|&quot;accepté&quot;| P[&quot;Paymaster ZeroDev&lt;br/&gt;(Swissquote paie)&quot;]:::ext
+    G --&gt;|&quot;refusé : quota ou plafond&quot;| N[&quot;Le client paie ses frais&lt;br/&gt;ou réessaie demain&quot;]:::real
+</pre>
+<h2>8. Ce qui est réel, ce qui est simulé</h2>
 <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,theme:"neutral",flowchart:{htmlLabels:true,useMaxWidth:true},sequence:{useMaxWidth:true}});</script>
 </body></html>

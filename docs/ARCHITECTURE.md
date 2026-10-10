@@ -18,11 +18,13 @@ flowchart LR
         DESK["Guichet d'agence<br/>/desk<br/>agent simulé"]:::mock
     end
 
+    GAS["Gas station<br/>routes /api/gas<br/>quotas anti-abus avant le paymaster"]:::mock
+
     COORD["Coordinateur de récupération<br/>routes /api/recovery<br/>relaie les approbations<br/>applique le délai annulable"]:::mock
 
     subgraph SQ["Faux serveur Swissquote — processus séparé, port 4000, stockage propre"]
         SQG["Gardien n°3 : 1 voix sur 3<br/>signe après vérification en personne"]:::mock
-        SQB["Comptes clients, KYC en agence,<br/>contrôle d'adresses, liaison wallet,<br/>retraits (Travel Rule)"]:::mock
+        SQB["Comptes clients, KYC en agence,<br/>contrôle d'adresses, registre de dApps approuvées,<br/>liaison wallet, retraits (Travel Rule)"]:::mock
     end
 
     ZD["ZeroDev (cloud)<br/>serveur de passkeys<br/>bundler · paymaster (frais payés)"]:::ext
@@ -34,6 +36,8 @@ flowchart LR
         USDC["USDC de test (Circle)"]:::real
     end
 
+    OWNER -->|"frais à sponsoriser"| GAS
+    GAS -->|"si quota respecté"| ZD
     OWNER -->|"passkey, transactions"| ZD
     NEWDEV -->|"nouveau passkey"| ZD
     ZD -->|"opérations utilisateur"| ACCOUNT
@@ -140,6 +144,34 @@ sequenceDiagram
     Note over SQ: un retrait depuis le compte Swissquote<br/>n'est autorisé QUE vers un wallet dont la propriété est prouvée
 ```
 
-## 6. Ce qui est réel, ce qui est simulé
+## 6. Interaction avec une dApp (bonus)
+
+```mermaid
+flowchart TB
+    classDef real fill:#bbf7d0,stroke:#15803d,color:#052e16
+    classDef mock fill:#fde68a,stroke:#b45309,color:#451a03
+    classDef bad fill:#fecaca,stroke:#b91c1c,color:#450a0a
+    A["Le client veut appeler une application"]:::real --> R["Registre des dApps approuvées<br/>adresse + empreinte du code (Swissquote, MOCK)"]:::mock
+    A --> H["Le wallet recalcule l'empreinte du code<br/>directement sur la blockchain"]:::real
+    R --> C{"Approuvée ET code identique ?"}
+    H --> C
+    C -->|"oui"| T["Simulation + résumé en langage clair<br/>puis Touch ID seul"]:::real
+    C -->|"application inconnue"| W["Case à cocher + confirmation<br/>de l'appareil de secours"]:::real
+    C -->|"même adresse, code changé"| X["Appel bloqué par le wallet"]:::bad
+```
+
+## 7. Frais sponsorisés : la « gas station »
+
+```mermaid
+flowchart LR
+    classDef real fill:#bbf7d0,stroke:#15803d,color:#052e16
+    classDef mock fill:#fde68a,stroke:#b45309,color:#451a03
+    classDef ext fill:#bfdbfe,stroke:#1d4ed8,color:#172554
+    APP["App du client"]:::real -->|"demande de sponsoring"| G["Gas station (MOCK)<br/>1. quota par wallet et par jour<br/>2. plafond global quotidien<br/>3. plafond de gaz par opération<br/>4. seule méthode autorisée : sponsoriser"]:::mock
+    G -->|"accepté"| P["Paymaster ZeroDev<br/>(Swissquote paie)"]:::ext
+    G -->|"refusé : quota ou plafond"| N["Le client paie ses frais<br/>ou réessaie demain"]:::real
+```
+
+## 8. Ce qui est réel, ce qui est simulé
 
 Voir le tableau complet dans `PROJET.md` (section « Ce qui est simulé »).

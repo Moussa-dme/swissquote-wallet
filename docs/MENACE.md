@@ -70,7 +70,12 @@ Clés de l'appareil de secours et du contact dans le navigateur ; KYC en agence 
 ### 3.8 Dépendances fournisseur
 ZeroDev fournit le compte intelligent, le serveur de passkeys, le bundler et le paymaster. Il ne peut **pas** signer à la place du client ni déplacer ses fonds, mais il peut refuser de sponsoriser des frais ou être indisponible. La clé publique du client est enregistrée sur la blockchain, qui fait foi.
 
-### 3.9 Autres limites
+### 3.9 Gas station et registre de dApps (limites des bonus)
+- **Gas station** : elle limite l'abus quand l'app est utilisée normalement, mais la politique du tableau de bord ZeroDev reste « tout sponsoriser » (son webhook ne peut pas joindre un serveur local) : un client modifié pourrait appeler le paymaster directement. En production : politique appliquée chez ZeroDev, clé gardée côté serveur, wallets liés à des clients KYC.
+- **Wallets en série** : un attaquant peut créer beaucoup de wallets ; le plafond global limite la perte, et la liaison à un client Swissquote (KYC) la supprimerait.
+- **Registre de dApps** : il est simulé ; la vérification de l'empreinte est réelle, mais ne couvre pas les changements de comportement dus à des données externes (oracles) ni les failles déjà présentes dans le code approuvé.
+
+### 3.10 Autres limites
 - Une seule famille de blockchains (EVM) avec ce modèle de compte ; le MPC fonctionnerait aussi pour Bitcoin.
 - Pendant le délai, l'**ancienne clé reste valide** : un voleur de téléphone peut agir avant la fin de la récupération ; d'où le plafond et le second appareil.
 - Seuls Safari et Chrome sur `localhost` ont été testés.

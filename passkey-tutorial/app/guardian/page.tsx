@@ -96,7 +96,7 @@ export default function GuardianPage() {
         if (!pk) return
         setBusy("p" + pay.id); setMsg(null)
         try {
-            const signature = await privateKeyToAccount(pk).signMessage({ message: paymentMessage(pay.id, pay.to, pay.amountLabel) })
+            const signature = await privateKeyToAccount(pk).signMessage({ message: paymentMessage(pay.id, pay.to, pay.amountLabel, pay.description) })
             const r = await coord(`payments/${pay.id}/approve`, { signature })
             setMsg(r.ok ? { kind: "ok", text: "Paiement confirmé depuis l'appareil de secours. Le propriétaire peut le signer avec son passkey." } : { kind: "err", text: r.data.error })
             refresh()
@@ -133,10 +133,17 @@ export default function GuardianPage() {
                         {setup && payments.length === 0 && <p className="text-sm text-gray-400">Aucun gros paiement en attente de confirmation.</p>}
                         {payments.map((pay) => (
                             <div key={pay.id} className="space-y-2">
-                                <p className="text-sm">
-                                    <b>{username}</b> veut envoyer <b>{pay.amountLabel} USDC</b> à <code>{fmtAddr(pay.to)}</code>.
-                                    C'est un <b>gros montant</b> : ton passkey ne suffit pas, ton appareil de secours doit confirmer.
-                                </p>
+                                {pay.description ? (
+                                    <p className="text-sm">
+                                        <b>{username}</b> veut <b>{pay.description}</b> (<code>{fmtAddr(pay.to)}</code>).
+                                        C'est une application <b>non approuvée par Swissquote</b> : son passkey ne suffit pas, ton appareil de secours doit confirmer.
+                                    </p>
+                                ) : (
+                                    <p className="text-sm">
+                                        <b>{username}</b> veut envoyer <b>{pay.amountLabel} USDC</b> à <code>{fmtAddr(pay.to)}</code>.
+                                        C'est un <b>gros montant</b> : ton passkey ne suffit pas, ton appareil de secours doit confirmer.
+                                    </p>
+                                )}
                                 <Msg kind="info">Confirme seulement si c'est bien le propriétaire qui fait ce paiement (appelle-le si tu n'es pas sûr). Dans le doute, refuse.</Msg>
                                 <div className="flex gap-2">
                                     <Btn tone="green" onClick={() => confirmPayment(pay)} busy={busy === "p" + pay.id} disabled={!imInSetup}>Confirmer ce paiement</Btn>

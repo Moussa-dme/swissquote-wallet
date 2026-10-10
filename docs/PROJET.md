@@ -69,12 +69,10 @@ Détail, sources et modèle d'hypothèses : [`BUSINESS.md`](BUSINESS.md).
 Swissquote perd aujourd'hui les clients qui veulent le self-custody. Notre wallet leur permet de **garder leurs clés tout en restant clients**. Le marché existe (23 % des Suisses possèdent des cryptos selon Bitpanda / YouGov 2024), mais 80 à 90 % des clients de la banque ne connaissent pas les wallets : c'est une **option complémentaire**. Les revenus viennent de la **rétention**, d'un **service de récupération payant** et d'un **abonnement « gas station »** ; un pourcentage des actifs seul est négligeable (à 0,01 %, 500 CHF par an pour 1 000 clients à 5 000 CHF, selon nos hypothèses). Les coûts sont maîtrisés : **pas d'assurance**, gas plafonné, développement léger car **aucune cryptographie ni contrat maison**. **Risque faible** : la banque n'a aucune clé et ne peut rien déplacer seule.
 
 ## 9. Bonus traités
-| Bonus | État |
+| Bonus | Ce qui est fait |
 |---|---|
-| **Gasless** | Les frais sont payés par un **paymaster** : le client n'a besoin d'aucun ETH (vérifié : wallet à 0 ETH qui transfère). **À finaliser** : remplacer la politique « tout sponsoriser » par des plafonds par client et une liste de contrats, pour expliquer comment l'abus est évité. |
-| **Interaction conforme** | **Fait** : résumé en langage clair, **simulation** de la transaction avant signature, **contrôle d'adresse** (avertissement), **vérifications renforcées au-delà d'un seuil**. **À faire** : liste de dApps approuvées avec vérification du code du contrat. |
-
-> *À mettre à jour à la fin de la nuit selon ce qui est effectivement terminé.*
+| **Gasless** | Les frais sont payés par un **paymaster** (Swissquote) : le client n'a besoin d'aucun ETH (vérifié : wallet à 0 ETH qui envoie des USDC). **Qui paie** : Swissquote. **Comment l'abus est évité** : une « **gas station** » entre l'app et le paymaster applique un **quota quotidien par wallet** (40 en démo), un **plafond global quotidien** (500), un **plafond de gaz par opération** (5 millions) et refuse toute autre requête que « sponsoriser » ; testé (la 41ᵉ demande d'un wallet est refusée). **Limite** : service de l'app (MOCK) ; en production, abonnement par client (idée du mentor : 100 opérations par mois), wallets liés à un client KYC, politique appliquée chez ZeroDev. |
+| **Interaction conforme avec les dApps** | **Liste de dApps approuvées** par Swissquote avec l'**empreinte du code** de chaque contrat, que le wallet **recalcule sur la blockchain** (même adresse ne veut pas dire même code, idée saluée par le mentor) ; détection des contrats modifiables (proxy) ; **simulation** de la transaction avec **résumé en langage clair** ; **contrôle d'adresse** (avertissement) ; **contrôles renforcés** : application inconnue → case à cocher + confirmation du second appareil, code changé → appel bloqué, gros paiement → second appareil. |
 
 ## 10. Ce qui est simulé (MOCK)
 | Élément | Réel ou simulé |
@@ -92,6 +90,8 @@ Swissquote perd aujourd'hui les clients qui veulent le self-custody. Notre walle
 | Clés de l'appareil de secours et du contact | **MOCK** : stockées dans le navigateur |
 | Délai de sécurité annulable | **Hors chaîne** (coordinateur) ; **60 s** en démo, 48 h en production |
 | Règle petit / gros montant | **Appliquée par l'app** ; production : on-chain |
+| Registre des dApps approuvées | **MOCK** (une dApp de démonstration) ; la vérification de l'empreinte du code par le wallet est **réelle** |
+| Gas station (quotas de frais) | **MOCK** (service de l'app) ; le paymaster est réel |
 
 ## 11. Outils d'IA utilisés
 | Outil | Usage |

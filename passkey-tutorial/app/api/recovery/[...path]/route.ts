@@ -96,12 +96,13 @@ export async function POST(req: NextRequest, { params }: { params: { path: strin
     if (a === "payments") {
         if (!id) {
             const { to, amountUnits, amountLabel } = body
+            const description = typeof body.description === "string" ? body.description.slice(0, 200) : undefined
             const username = norm(body.username)
             const setup = db.setups[username]
             if (!setup) return err(400, "Installe d'abord la récupération : l'appareil de secours est requis pour les gros paiements.")
             if (!isAddr(to) || !/^[0-9]+$/.test(String(amountUnits)) || !amountLabel) return err(400, "paramètres invalides")
             const now = Date.now()
-            const pay: Payment = { id: Math.random().toString(36).slice(2, 8), username, to, amountUnits: String(amountUnits), amountLabel: String(amountLabel), createdAt: now, expiresAt: now + 5 * 60 * 1000, status: "pending" }
+            const pay: Payment = { id: Math.random().toString(36).slice(2, 8), username, to, amountUnits: String(amountUnits), amountLabel: String(amountLabel), description, createdAt: now, expiresAt: now + 5 * 60 * 1000, status: "pending" }
             db.payments[pay.id] = pay
             writeDB(db)
             return NextResponse.json({ id: pay.id })
@@ -115,7 +116,7 @@ export async function POST(req: NextRequest, { params }: { params: { path: strin
             const signature = body.signature
             if (!setup || !isHex(signature)) return err(400, "paramètres invalides")
             // la signature doit venir de l'appareil de secours enregistré, et porter sur CE paiement précis
-            const who = await recoverMessageAddress({ message: paymentMessage(pay.id, pay.to, pay.amountLabel), signature: signature as Hex }).catch(() => null)
+            const who = await recoverMessageAddress({ message: paymentMessage(pay.id, pay.to, pay.amountLabel, pay.description), signature: signature as Hex }).catch(() => null)
             if (!who || lc(who) !== lc(setup.guardians.backup)) return err(403, "Signature invalide : ce n'est pas l'appareil de secours de ce client.")
             pay.status = "approved"; pay.approvalSignature = signature
             writeDB(db)

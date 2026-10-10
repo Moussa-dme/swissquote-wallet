@@ -30,6 +30,7 @@ export type Payment = {
     to: string
     amountUnits: string
     amountLabel: string
+    description?: string // appel d'une dApp non approuvée (sinon : paiement en USDC)
     createdAt: number
     expiresAt: number
     status: "pending" | "approved" | "refused" | "done"

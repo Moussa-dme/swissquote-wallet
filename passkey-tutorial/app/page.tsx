@@ -20,6 +20,7 @@ import { Btn, Card, Input, Msg, Pill } from "./components/ui"
 import { coord, fmtAddr, gasStationUrl } from "@/lib/recovery"
 import PaymentPanel from "./components/PaymentPanel"
 import SwissquoteLinkPanel from "./components/SwissquoteLinkPanel"
+import DappPanel from "./components/DappPanel"
 
 const CHAIN = sepolia
 // URLs lues depuis .env.local (voir .env.example) pour ne pas mettre le Project ID dans Git
@@ -311,6 +312,7 @@ export default function Home() {
                             <div className="space-y-4 scroll-mt-4" ref={advancedRef}>
                                 <OwnerRecoveryPanel username={username} accountAddress={accountAddress} ready={isKernelClientReady} kernelClient={kernelClient} kernelAccount={kernelAccount} />
                                 <SwissquoteLinkPanel ready={isKernelClientReady} account={kernelAccount} />
+                                <DappPanel username={username} ready={isKernelClientReady} account={kernelAccount} client={kernelClient} />
                                 <Card title="Transaction de test">
                                     <p className="text-sm text-slate-300">Envoie une vraie transaction sans frais (création d'un jeton de test).</p>
                                     <Btn tone="green" onClick={handleSendUserOp} busy={isSendingUserOp}>Envoyer une transaction de test</Btn>

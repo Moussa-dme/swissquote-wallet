@@ -23,5 +23,5 @@ export const fromUnits = (units: bigint | string) => formatUnits(BigInt(units), 
 export const isLarge = (units: bigint) => units > parseUnits(String(SMALL_LIMIT_USDC), USDC_DECIMALS)
 
 // Message signé par l'appareil de secours pour confirmer UN paiement précis
-export const paymentMessage = (id: string, to: string, amountLabel: string) =>
-    `Confirmer le paiement ${id} : ${amountLabel} USDC vers ${to}`
+export const paymentMessage = (id: string, to: string, amountLabel: string, description?: string) =>
+    description ? `Confirmer ${description} (${id}) : ${to}` : `Confirmer le paiement ${id} : ${amountLabel} USDC vers ${to}`
