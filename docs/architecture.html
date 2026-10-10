@@ -1,0 +1,119 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Architecture du wallet</title>
+<style>body{font-family:system-ui,sans-serif;max-width:1200px;margin:24px auto;padding:0 16px;color:#111}h1{font-size:28px}h2{margin-top:40px;border-bottom:1px solid #ddd;padding-bottom:6px}.note{background:#f3f4f6;padding:10px 14px;border-radius:8px}pre.mermaid{background:#fff;text-align:center}.leg span{display:inline-block;padding:4px 10px;margin-right:8px;border-radius:6px;border:1px solid}</style></head><body>
+<p class="leg"><span style="background:#bbf7d0;border-color:#15803d">Réel</span><span style="background:#fde68a;border-color:#b45309">MOCK (simulé)</span><span style="background:#bfdbfe;border-color:#1d4ed8">Service externe</span></p>
+<h1>Architecture</h1>
+<p class="note">Brouillon factuel. **Vert = réel** (code ou service qui fonctionne vraiment, sur la blockchain de test Sepolia). **Orange = MOCK** (simulation, clairement étiquetée dans le code et l&#x27;interface). Les schémas s&#x27;affichent directement sur GitHub (format Mermaid) ; pour les slides, on peut les exporter en image avec &lt;https://mermaid.live&gt; (coller le code, « PNG »).</p>
+<h2>1. Vue d&#x27;ensemble : qui parle à qui</h2>
+<pre class="mermaid">flowchart LR
+    classDef real fill:#bbf7d0,stroke:#15803d,color:#052e16
+    classDef mock fill:#fde68a,stroke:#b45309,color:#451a03
+    classDef ext fill:#bfdbfe,stroke:#1d4ed8,color:#172554
+
+    subgraph DEV[&quot;Appareils et navigateurs (une app web Next.js)&quot;]
+        OWNER[&quot;Appareil du client&lt;br/&gt;page d&#x27;accueil&lt;br/&gt;clé = passkey (Touch ID)&quot;]:::real
+        NEWDEV[&quot;Nouvel appareil&lt;br/&gt;/recover&lt;br/&gt;nouveau passkey&quot;]:::real
+        BACKUP[&quot;Appareil de secours&lt;br/&gt;/guardian&lt;br/&gt;clé stockée dans le navigateur&quot;]:::mock
+        CONTACT[&quot;Contact de confiance&lt;br/&gt;/guardian&lt;br/&gt;clé stockée dans le navigateur&quot;]:::mock
+        DESK[&quot;Guichet d&#x27;agence&lt;br/&gt;/desk&lt;br/&gt;agent simulé&quot;]:::mock
+    end
+
+    COORD[&quot;Coordinateur de récupération&lt;br/&gt;routes /api/recovery&lt;br/&gt;relaie les approbations&lt;br/&gt;applique le délai annulable&quot;]:::mock
+
+    subgraph SQ[&quot;Faux serveur Swissquote — processus séparé, port 4000, stockage propre&quot;]
+        SQG[&quot;Gardien n°3 : 1 voix sur 3&lt;br/&gt;signe après vérification en personne&quot;]:::mock
+        SQB[&quot;Comptes clients, KYC en agence,&lt;br/&gt;contrôle d&#x27;adresses, liaison wallet,&lt;br/&gt;retraits (Travel Rule)&quot;]:::mock
+    end
+
+    ZD[&quot;ZeroDev (cloud)&lt;br/&gt;serveur de passkeys&lt;br/&gt;bundler · paymaster (frais payés)&quot;]:::ext
+
+    subgraph CHAIN[&quot;Blockchain de test Sepolia&quot;]
+        ACCOUNT[&quot;Wallet du client&lt;br/&gt;compte intelligent Kernel (ERC-4337)&lt;br/&gt;propriétaire = passkey&quot;]:::real
+        GUARD[&quot;Compte gardien&lt;br/&gt;multisig 2 sur 3&lt;br/&gt;(appareil de secours, contact, Swissquote)&quot;]:::real
+        RECOV[&quot;Action de récupération + hook&lt;br/&gt;(contrats ZeroDev)&quot;]:::real
+        USDC[&quot;USDC de test (Circle)&quot;]:::real
+    end
+
+    OWNER --&gt;|&quot;passkey, transactions&quot;| ZD
+    NEWDEV --&gt;|&quot;nouveau passkey&quot;| ZD
+    ZD --&gt;|&quot;opérations utilisateur&quot;| ACCOUNT
+    OWNER &lt;--&gt;|&quot;état, gros paiements, annulation&quot;| COORD
+    NEWDEV &lt;--&gt;|&quot;demande de récupération&quot;| COORD
+    BACKUP &lt;--&gt;|&quot;approbations, confirmation des gros paiements&quot;| COORD
+    CONTACT &lt;--&gt;|&quot;approbations&quot;| COORD
+    NEWDEV &lt;--&gt;|&quot;dossier, approbation&quot;| SQG
+    DESK --&gt;|&quot;identité vérifiée en personne&quot;| SQB
+    OWNER &lt;--&gt;|&quot;liaison, preuve de propriété, contrôle d&#x27;adresse&quot;| SQB
+    SQB -.- SQG
+    GUARD --&gt;|&quot;remplace la clé du propriétaire&quot;| RECOV
+    RECOV --&gt;|&quot;nouveau propriétaire&quot;| ACCOUNT
+    ACCOUNT --&gt;|&quot;envoie / reçoit&quot;| USDC
+    SQB -.-&gt;|&quot;vérifie la signature du wallet (ERC-1271)&quot;| ACCOUNT
+</pre>
+<h2>2. Le wallet : qui contrôle quoi</h2>
+<pre class="mermaid">flowchart TB
+    classDef real fill:#bbf7d0,stroke:#15803d,color:#052e16
+    classDef mock fill:#fde68a,stroke:#b45309,color:#451a03
+    PK[&quot;Passkey du client&lt;br/&gt;Touch ID&quot;]:::real --&gt;|&quot;signe les opérations&quot;| W[&quot;Wallet (compte Kernel)&lt;br/&gt;mêmes adresse et fonds&lt;br/&gt;quelle que soit la clé&quot;]:::real
+    G[&quot;Compte gardien&lt;br/&gt;2 voix sur 3 requises&quot;]:::real --&gt;|&quot;peut REMPLACER la clé&lt;br/&gt;(jamais déplacer les fonds)&quot;| W
+    B[&quot;Appareil de secours&quot;]:::mock --&gt; G
+    C[&quot;Contact de confiance&quot;]:::mock --&gt; G
+    S[&quot;Swissquote (MOCK)&lt;br/&gt;après vérification en personne&quot;]:::mock --&gt; G
+</pre>
+<h2>3. Récupération (séquence)</h2>
+<pre class="mermaid">sequenceDiagram
+    autonumber
+    actor Client as Client (nouvel appareil)
+    participant Coord as Coordinateur (MOCK)
+    participant SQ as Swissquote (MOCK)
+    participant Autre as Appareil de secours / contact
+    participant Proprio as Ancien appareil (propriétaire)
+    participant Chain as Blockchain (Sepolia)
+
+    Client-&gt;&gt;Client: crée un nouveau passkey (Touch ID)
+    Client-&gt;&gt;Coord: demande de récupération (nouvelle clé)
+    Coord--&gt;&gt;Proprio: alerte + compte à rebours
+    Note over Coord,Proprio: Délai de sécurité (60 s en démo, 48 h en production)&lt;br/&gt;le propriétaire peut ANNULER (Touch ID)
+    alt Voie Swissquote
+        Client-&gt;&gt;SQ: ouvre un dossier
+        Note over SQ: un SMS ou un e-mail ne suffit JAMAIS&lt;br/&gt;vérification d&#x27;identité en personne (agence)
+        SQ--&gt;&gt;Client: signature de Swissquote (1 voix)
+        Client-&gt;&gt;Coord: dépose la signature
+    end
+    Autre-&gt;&gt;Coord: approuve (1 voix)
+    Note over Coord: les signatures ne sont remises qu&#x27;après le délai,&lt;br/&gt;jamais si la demande est annulée
+    Autre-&gt;&gt;Chain: finalise (signe en dernier, envoie)
+    Chain--&gt;&gt;Chain: le compte gardien (2 voix sur 3) remplace le propriétaire
+    Client-&gt;&gt;Chain: signe avec le NOUVEAU passkey ✅ (l&#x27;ancien est refusé)
+</pre>
+<h2>4. Paiement : petit ou gros montant</h2>
+<pre class="mermaid">flowchart TB
+    classDef real fill:#bbf7d0,stroke:#15803d,color:#052e16
+    classDef mock fill:#fde68a,stroke:#b45309,color:#451a03
+    START[&quot;Le client saisit un paiement en USDC&quot;]:::real --&gt; SIM[&quot;Résumé en langage clair&lt;br/&gt;+ simulation (la transaction réussirait ?)&lt;br/&gt;+ solde après + frais = 0&quot;]:::real
+    SIM --&gt; SCREEN[&quot;Contrôle de l&#x27;adresse par Swissquote (MOCK)&lt;br/&gt;avertit, ne bloque jamais&quot;]:::mock
+    SCREEN --&gt; CHECK{&quot;Montant&lt;br/&gt;supérieur au seuil ?&quot;}
+    CHECK --&gt;|&quot;non (petit)&quot;| TOUCH[&quot;Touch ID seul&quot;]:::real
+    CHECK --&gt;|&quot;oui (gros)&quot;| SECOND[&quot;Confirmation de l&#x27;appareil de secours&lt;br/&gt;(signature portant sur CE paiement)&quot;]:::real
+    SECOND --&gt; TOUCH
+    TOUCH --&gt; SEND[&quot;Transaction signée et envoyée&lt;br/&gt;frais payés par le paymaster&quot;]:::real
+</pre>
+<h2>5. Liaison au compte Swissquote et Travel Rule</h2>
+<pre class="mermaid">sequenceDiagram
+    autonumber
+    actor Client
+    participant W as Wallet du client
+    participant SQ as Swissquote (MOCK)
+    participant Chain as Blockchain
+    Client-&gt;&gt;SQ: se connecte (numéro de client + mot de passe, MOCK)
+    Client-&gt;&gt;SQ: demande de lier son wallet
+    SQ--&gt;&gt;Client: message unique à signer (expire en 5 min, usage unique)
+    Client-&gt;&gt;W: signe le message (Touch ID)
+    Client-&gt;&gt;SQ: envoie la signature
+    SQ-&gt;&gt;Chain: vérifie la signature (ERC-1271) — aucune clé n&#x27;est communiquée
+    SQ--&gt;&gt;Client: wallet lié et propriété prouvée
+    Note over SQ: un retrait depuis le compte Swissquote&lt;br/&gt;n&#x27;est autorisé QUE vers un wallet dont la propriété est prouvée
+</pre>
+<h2>6. Ce qui est réel, ce qui est simulé</h2>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,theme:"neutral",flowchart:{htmlLabels:true,useMaxWidth:true},sequence:{useMaxWidth:true}});</script>
+</body></html>
