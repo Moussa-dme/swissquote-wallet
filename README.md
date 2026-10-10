@@ -13,6 +13,7 @@ Un wallet crypto dont le client garde les clés (passkey, Touch ID), avec une **
 | [`docs/LEGAL.md`](docs/LEGAL.md) | Garde et Travel Rule |
 | [`docs/BUSINESS.md`](docs/BUSINESS.md) | Business case |
 | [`docs/DEMARRAGE.md`](docs/DEMARRAGE.md) | **Installer et tester la démo pas à pas** |
+| [`docs/SCRIPT-VIDEO.md`](docs/SCRIPT-VIDEO.md) | Script de la vidéo de démo, minute par minute |
 | [`docs/GUIDE-DU-CODE.md`](docs/GUIDE-DU-CODE.md) | **Comprendre le code** : les 8 mécanismes, où est la preuve, questions du jury |
 | [`swissquote-track.md`](swissquote-track.md) | Consignes officielles du track |
 
