@@ -20,3 +20,7 @@ bsa-hack/
 
 # Clés de test jetables du spike (testnet)
 spike/.keys*.json
+
+# Données locales du faux serveur / coordinateur (MOCK)
+mock-swissquote/data.json
+passkey-tutorial/.data/

@@ -1,0 +1,13 @@
+{
+  "name": "mock-swissquote",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "description": "MOCK : faux serveur Swissquote (gardien de récupération). Processus séparé, stockage propre.",
+  "dependencies": {
+    "@zerodev/sdk": "^5.5.10",
+    "@zerodev/weighted-validator": "^5.5.1",
+    "tslib": "^2.8.1",
+    "viem": "^2.57.4"
+  }
+}
