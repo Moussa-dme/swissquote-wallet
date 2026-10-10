@@ -16,7 +16,7 @@ import { sepolia } from "viem/chains"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { createKernelAccount, createKernelAccountClient, createZeroDevPaymasterClient } from "@zerodev/sdk"
 import {
-    PasskeyValidatorContractVersion, WebAuthnMode, toPasskeyValidator, toWebAuthnKey
+    PasskeyValidatorContractVersion, WebAuthnMode, deserializePasskeyValidator, toPasskeyValidator, toWebAuthnKey
 } from "@zerodev/passkey-validator"
 import { getEntryPoint, KERNEL_V3_1 } from "@zerodev/sdk/constants"
 import {
@@ -152,6 +152,12 @@ export async function passkeyValidatorFor(passkeyName: string, mode: "register" 
         webAuthnKey, entryPoint, kernelVersion,
         validatorContractVersion: PasskeyValidatorContractVersion.V0_0_3_PATCHED
     } as any)
+}
+
+// Retrouve EXACTEMENT le passkey créé à la demande de récupération (identifiant de credential mémorisé),
+// au lieu de laisser le navigateur proposer n'importe quel passkey du site (risque de choisir l'ancien).
+export async function passkeyValidatorFromSerialized(serializedData: string) {
+    return deserializePasskeyValidator(publicClient as any, { serializedData, entryPoint, kernelVersion } as any)
 }
 
 // Wallet existant (adresse inchangée) piloté par le NOUVEAU passkey, avec gas sponsorisé

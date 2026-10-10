@@ -6,7 +6,7 @@
 import React, { useCallback, useEffect, useState } from "react"
 import { encodeFunctionData, parseAbi } from "viem"
 import {
-    SWISSQUOTE_URL, ROLE_LABEL, api, buildRecoveryCallData, coord, errText, fmtAddr, passkeyValidatorFor, recoveredWallet
+    SWISSQUOTE_URL, ROLE_LABEL, api, buildRecoveryCallData, coord, errText, fmtAddr, passkeyValidatorFor, passkeyValidatorFromSerialized, recoveredWallet
 } from "@/lib/recovery"
 import { Btn, Card, Input, MockBadge, Msg, countdown, useNow } from "../components/ui"
 
@@ -55,6 +55,7 @@ export default function RecoverPage() {
             const r = await coord("requests", { username, newValidator: validator.address, enableData, callData })
             if (!r.ok) throw new Error(r.data.error)
             ls.set(`sq-recover-req-${username}`, r.data.id); ls.set(`sq-recover-pk-${r.data.id}`, passkeyName)
+            ls.set(`sq-recover-ser-${r.data.id}`, validator.getSerializedData()) // pour retrouver CE passkey précisément
             setReqId(r.data.id)
             setMsg({ kind: "ok", text: "Demande créée avec un nouveau passkey. Il faut maintenant l'accord de 2 gardiens sur 3, puis la fin du délai de sécurité." })
             refresh()
@@ -96,8 +97,11 @@ export default function RecoverPage() {
     const useWallet = async () => {
         setBusy("wallet"); setMsg(null)
         try {
-            const name = ls.get(`sq-recover-pk-${reqId}`)
-            const validator = await passkeyValidatorFor(name, "login")
+            const serialized = ls.get(`sq-recover-ser-${reqId}`)
+            // idéal : le passkey exact créé pour la récupération ; sinon (ancienne demande) : connexion classique
+            const validator = serialized
+                ? await passkeyValidatorFromSerialized(serialized)
+                : await passkeyValidatorFor(ls.get(`sq-recover-pk-${reqId}`), "login")
             const w = await recoveredWallet(validator, setup.account)
             setWallet(w)
             setMsg({ kind: "ok", text: "Connecté au wallet récupéré avec le nouveau passkey." })

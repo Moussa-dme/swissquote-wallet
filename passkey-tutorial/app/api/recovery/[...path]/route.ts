@@ -16,6 +16,8 @@ const err = (status: number, message: string) => NextResponse.json({ error: mess
 const isAddr = (s: any) => typeof s === "string" && /^0x[0-9a-fA-F]{40}$/.test(s)
 const isHex = (s: any) => typeof s === "string" && /^0x[0-9a-fA-F]*$/.test(s)
 const lc = (s: string) => s.toLowerCase()
+// Le nom du dossier client ne tient compte ni des majuscules ni des espaces (évite « Bob » ≠ « bob »)
+const norm = (s: any) => String(s ?? "").trim().toLowerCase()
 
 export async function GET(req: NextRequest, { params }: { params: { path: string[] } }) {
     const [a, id, b] = params.path
@@ -23,7 +25,7 @@ export async function GET(req: NextRequest, { params }: { params: { path: string
     const url = new URL(req.url)
 
     if (a === "state") {
-        const username = url.searchParams.get("username") ?? ""
+        const username = norm(url.searchParams.get("username"))
         if (!username) return err(400, "username requis")
         const requests = Object.values(db.requests).filter((r) => r.username === username).sort((x, y) => y.createdAt - x.createdAt)
         // on ne renvoie jamais les signatures ici : seulement qui a approuvé
@@ -51,7 +53,8 @@ export async function POST(req: NextRequest, { params }: { params: { path: strin
 
     // Un gardien (appareil de secours / contact) enregistre sa clé publique pour un client
     if (a === "registry") {
-        const { username, role, address } = body
+        const { role, address } = body
+        const username = norm(body.username)
         if (!username || !["backup", "contact"].includes(role) || !isAddr(address)) return err(400, "paramètres invalides")
         db.registry[username] = { ...(db.registry[username] ?? {}), [role]: address }
         writeDB(db)
@@ -60,7 +63,8 @@ export async function POST(req: NextRequest, { params }: { params: { path: strin
 
     // Le propriétaire déclare l'installation de la récupération (après l'avoir installée on-chain)
     if (a === "setup") {
-        const { username, account, guardians, guardianAccount, delaySeconds } = body
+        const { account, guardians, guardianAccount, delaySeconds } = body
+        const username = norm(body.username)
         if (!username || !isAddr(account) || !isAddr(guardianAccount) || !ROLES.every((r) => isAddr(guardians?.[r]))) return err(400, "paramètres invalides")
         db.setups[username] = { username, account, guardians, guardianAccount, delaySeconds: Number(delaySeconds) || 120, installedAt: Date.now() }
         writeDB(db)
@@ -69,7 +73,8 @@ export async function POST(req: NextRequest, { params }: { params: { path: strin
 
     // Une demande de récupération depuis un nouvel appareil
     if (a === "requests" && !id) {
-        const { username, newValidator, enableData, callData } = body
+        const { newValidator, enableData, callData } = body
+        const username = norm(body.username)
         const setup = db.setups[username]
         if (!setup) return err(404, "Aucune récupération installée pour ce client.")
         if (!isAddr(newValidator) || !isHex(enableData) || !isHex(callData)) return err(400, "paramètres invalides")
