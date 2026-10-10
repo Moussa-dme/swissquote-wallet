@@ -32,14 +32,20 @@ Notation : implémentation technique 35, sécurité & design de garde 20, faisab
 - Moi (débutant, sur Mac) : partie technique avec Claude.
 - Mon binôme : produit, modèle de menace, légal, business case, slides, pitch.
 
-## Planning (heure de Zurich)
-- 10h15–11h : setup ZeroDev, lancer le template.
-- 11h–14h : JALON 1 = créer le wallet avec passkey + envoyer une vraie transaction gasless sur testnet. Si pas fait à 14h → on simplifie.
-- 14h–18h30 : JALON 2 = récupération (gardiens + délai + annulation).
-- 19h30–23h : couche Swissquote (liaison compte simulée, preuve de propriété, liste blanche, contrôle gros montants).
-- 23h–6h : finitions + sommeil en alternance.
-- Dimanche 6h : GEL DES FONCTIONNALITÉS. 6h–9h : bugs, README (architecture + ce qui est simulé), vidéo de démo.
-- 9h–9h30 : soumettre (deadline 10h00). Jugement 10h30–13h.
+## Planning révisé (sam. 10 oct 17h → dim. 11 oct 10h, heure de Zurich)
+Principe : le bonus ne compte que si créer → signer → récupérer marche de bout en bout. Ordre : récupération d'abord, extras ensuite.
+- 17h00–17h45 : recherche ZeroDev (récupération/gardiens, branche `feat/example_guardian_recovery`), choix du design minimal, plan validé avec l'utilisateur. Binôme : modèle de garde + menace + business case (brouillons).
+- 17h45–20h00 : JALON 2a = récupération on-chain minimale (gardiens, nouvelle clé sur un 2e appareil/navigateur).
+- 20h00–20h45 : dîner/pause + point avec le binôme.
+- 20h45–23h00 : JALON 2b = gardien « Swissquote » MOCK (processus séparé, stockage propre, contrôle fort simulé), délai d'annulation, scénario attaquant refusé, récupération sans Swissquote.
+- **23h00 : POINT DE CONTRÔLE** : créer → signer → récupérer doit marcher. Sinon : on simplifie le design (décision à 21h30 si ça coince) et on ne touche à aucun bonus.
+- 23h00–00h30 : gros vs petit montant (confirmation renforcée), liaison de compte MOCK, tableau MOCK du README. Commit + push.
+- 00h30–05h00 : sommeil (l'utilisateur ; pas de travail non supervisé). 
+- 05h00–06h00 : bonus seulement si le point de contrôle est vert (règles de gas fines / gas en USDC, liste blanche de dApps avec hash du code).
+- **06h00 : GEL DES FONCTIONNALITÉS.**
+- 06h00–08h30 : correction de bugs, README (architecture, MOCK, outils d'IA), schéma d'architecture, enregistrement de la vidéo de démo, répétition du pitch.
+- 08h30–09h30 : description du projet (6 sujets + bonus + outils d'IA), push final, soumission. Marge 30 min avant la deadline de 10h00.
+- Dim. ~9h : le mentor Swissquote est de retour, lui montrer la démo / poser les dernières questions.
 
 ## Règles de travail
 - **Référence absolue : `swissquote-track.md` (consignes officielles du track). Ne jamais dévier de ces consignes ; si une idée ou une réponse de mentor semble s'en écarter, le signaler à l'utilisateur avant d'agir. Relire ce fichier au début de chaque session et avant chaque grande décision.**
