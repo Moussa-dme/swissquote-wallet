@@ -12,7 +12,7 @@ import {
     toWebAuthnKey
 } from "@zerodev/passkey-validator"
 import { getEntryPoint, KERNEL_V3_1 } from "@zerodev/sdk/constants"
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { createPublicClient, http, parseAbi, encodeFunctionData } from "viem"
 import { sepolia } from "viem/chains"
 import OwnerRecoveryPanel from "./components/OwnerRecoveryPanel"
@@ -65,6 +65,7 @@ export default function Home() {
     const [userOpHash, setUserOpHash] = useState("")
     const [userOpStatus, setUserOpStatus] = useState("")
     const [advanced, setAdvanced] = useState(false)
+    const advancedRef = useRef<HTMLDivElement>(null)
     const [protection, setProtection] = useState<any>(null)
     const [copied, setCopied] = useState(false)
 
@@ -214,6 +215,11 @@ export default function Home() {
         return () => clearInterval(t)
     }, [isKernelClientReady, username])
 
+    const openAdvanced = () => {
+        setAdvanced(true)
+        setTimeout(() => advancedRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150)
+    }
+
     const copyAddress = async () => {
         try { await navigator.clipboard.writeText(accountAddress); setCopied(true); setTimeout(() => setCopied(false), 1500) } catch {}
     }
@@ -289,7 +295,7 @@ export default function Home() {
                             <Card tone="warn">
                                 <p className="font-medium">⚠️ Wallet pas encore protégé</p>
                                 <p className="text-sm text-slate-200">Sans récupération, perdre cet appareil signifie perdre l'accès. Elle est aussi nécessaire pour les gros paiements.</p>
-                                <Btn tone="purple" onClick={() => setAdvanced(true)}>Activer la protection</Btn>
+                                <Btn tone="purple" onClick={openAdvanced}>Activer la protection</Btn>
                             </Card>
                         )}
 
@@ -301,7 +307,7 @@ export default function Home() {
                             {advanced ? "▲ Masquer le mode avancé" : "▼ Mode avancé : récupération, compte Swissquote"}
                         </button>
                         {advanced && (
-                            <div className="space-y-4">
+                            <div className="space-y-4 scroll-mt-4" ref={advancedRef}>
                                 <OwnerRecoveryPanel username={username} accountAddress={accountAddress} ready={isKernelClientReady} kernelClient={kernelClient} kernelAccount={kernelAccount} />
                                 <SwissquoteLinkPanel ready={isKernelClientReady} account={kernelAccount} />
                                 <Card title="Transaction de test">
