@@ -15,6 +15,7 @@ import { getEntryPoint, KERNEL_V3_1 } from "@zerodev/sdk/constants"
 import React, { useEffect, useState } from "react"
 import { createPublicClient, http, parseAbi, encodeFunctionData } from "viem"
 import { sepolia } from "viem/chains"
+import OwnerRecoveryPanel from "./components/OwnerRecoveryPanel"
 
 const CHAIN = sepolia
 // URLs lues depuis .env.local (voir .env.example) pour ne pas mettre le Project ID dans Git
@@ -298,6 +299,22 @@ export default function Home() {
                                 }}
                             />
                         )}
+                    </div>
+
+                    {/* Récupération 2-sur-3 (propriétaire) */}
+                    <OwnerRecoveryPanel
+                        username={username}
+                        accountAddress={accountAddress}
+                        ready={isKernelClientReady}
+                        kernelClient={kernelClient}
+                        kernelAccount={kernelAccount}
+                    />
+
+                    {/* Autres rôles de la démo (à ouvrir dans un autre navigateur) */}
+                    <div className="text-sm text-gray-400 text-center space-x-4">
+                        <a className="text-blue-500 hover:text-blue-700" href="/guardian" target="_blank">Gardien (secours / contact)</a>
+                        <a className="text-blue-500 hover:text-blue-700" href="/recover" target="_blank">Nouvel appareil</a>
+                        <a className="text-blue-500 hover:text-blue-700" href="/desk" target="_blank">Guichet Swissquote (MOCK)</a>
                     </div>
                 </div>
             </div>

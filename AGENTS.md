@@ -94,6 +94,12 @@ Principe : le bonus ne compte que si créer → signer → récupérer marche de
 - Pas de gel de compte par Swissquote ; à la place : procédure d'urgence initiée par le client.
 - Tension à trancher : délai d'annulation (protège contre une récupération malveillante) vs rapidité (téléphone volé = l'ancienne clé reste valide pendant le délai). Mentor suggère la logique « runaway ».
 
+## Commandes pour lancer la démo (2 processus + navigateurs)
+- App : `cd passkey-tutorial && npm run dev` -> http://localhost:3000 (pages : `/` propriétaire, `/guardian` appareil de secours / contact, `/recover` nouvel appareil, `/desk` guichet Swissquote MOCK).
+- Faux serveur Swissquote (MOCK, processus séparé, port 4000, stockage `mock-swissquote/data.json`) : `cd mock-swissquote && node --env-file=../passkey-tutorial/.env.local server.mjs`.
+- Test headless de la récupération : `cd spike && node --env-file=../passkey-tutorial/.env.local flow-test.mjs` (serveur MOCK lancé).
+- Coordinateur de récupération (MOCK) = routes `passkey-tutorial/app/api/recovery/[...path]/route.ts`, stockage `passkey-tutorial/.data/coordinator.json` (gitignoré).
+
 ## Journal de progression
 (à mettre à jour au fil du hackathon)
 
@@ -127,4 +133,10 @@ Principe : le bonus ne compte que si créer → signer → récupérer marche de
     - Piège : il faut `tslib` en dépendance explicite ; le SDK (5.5.10) et le weighted-validator (5.5.1) sont compatibles.
     - Non testé dans le spike : propriétaire à passkey (navigateur) remplacé par un nouveau passkey, et signataires passkey dans le multisig ; l'exemple ZeroDev prouve déjà le remplacement par un passkey avec un gardien simple. À tester dans l'app.
   - Prochaine étape : intégrer dans l'app (Jalon 2a) : bouton « Installer la récupération », « Perdre l'appareil », « Récupérer sur un nouvel appareil » avec 2 gardiens sur 3 (appareil de secours, contact, Swissquote MOCK = serveur séparé).
+  - **INTÉGRATION RÉCUPÉRATION DANS L'APP (sam. ~19h)** : code écrit, types/lint OK, coordinateur et serveur MOCK testés en script ; **parcours navigateur avec passkeys pas encore testé** (à faire avec l'utilisateur).
+    - `lib/recovery.ts` (briques ZeroDev : gardien multisig 2/3, install, approbation, finalisation, nouveau passkey), `lib/store.ts`, API coordinateur (délai annulable appliqué hors chaîne : signatures retenues avant `readyAt`, jamais remises si annulé ; annulation prouvée par signature passkey ERC-1271), pages `/guardian` `/recover` `/desk`, panneau `OwnerRecoveryPanel` sur `/`, serveur `mock-swissquote/`.
+    - Gardiens v1 : appareil de secours et contact = clés ECDSA stockées dans le navigateur (MOCK, à remplacer par un passkey si le temps le permet) ; Swissquote = serveur séparé qui exige un dossier « vérifié en personne » (SMS/e-mail refusés) et reconstruit lui-même l'opération avant de signer.
+    - Le dernier gardien qui finalise doit être un gardien réel (le SDK ajoute sa signature en dernier) : pages `/guardian`, bouton « Finaliser ».
+    - `next.config.mjs` : `output: 'export'` retiré (routes serveur nécessaires).
+    - Limite à documenter : approbations rejouables tant que le nonce du compte gardien ne change pas (même après annulation) ; délai hors chaîne ; clés de gardiens dans le navigateur (MOCK).
 
