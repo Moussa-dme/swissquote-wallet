@@ -21,6 +21,7 @@ export default function PaymentPanel({ username, ready, account, client }: Props
     const [amount, setAmount] = useState("")
     const [balance, setBalance] = useState<bigint | null>(null)
     const [preview, setPreview] = useState<Preview | null>(null)
+    const [gas, setGas] = useState<any>(null)
     const [paymentId, setPaymentId] = useState("")
     const [state, setState] = useState<any>(null)
     const [busy, setBusy] = useState("")
@@ -34,6 +35,13 @@ export default function PaymentPanel({ username, ready, account, client }: Props
         try { setBalance(await publicClient.readContract({ address: USDC, abi: erc20Abi, functionName: "balanceOf", args: [address as Address] }) as bigint) } catch {}
     }, [address])
     useEffect(() => { loadBalance() }, [loadBalance])
+
+    // Frais pris en charge : combien d'opérations gratuites reste-t-il aujourd'hui pour ce wallet ?
+    const loadGas = useCallback(async () => {
+        if (!address) return
+        try { setGas(await fetch(`/api/gas/usage?address=${address}`).then((x) => x.json())) } catch {}
+    }, [address])
+    useEffect(() => { loadGas() }, [loadGas])
 
     const refresh = useCallback(async () => {
         if (!username) return
@@ -78,7 +86,7 @@ export default function PaymentPanel({ username, ready, account, client }: Props
             const receipt = await client.waitForUserOperationReceipt({ hash })
             if (paymentId) await coord(`payments/${paymentId}/done`, { txHash: receipt.receipt.transactionHash })
             setMsg({ kind: "ok", text: `✅ ${pv.label} USDC envoyés à ${fmtAddr(pv.to)}. Frais payés par Swissquote (gasless). Transaction : ${fmtAddr(receipt.receipt.transactionHash)}` })
-            setPreview(null); setPaymentId(""); setAmount(""); loadBalance()
+            setPreview(null); setPaymentId(""); setAmount(""); loadBalance(); loadGas()
         } catch (e) { setMsg({ kind: "err", text: "Envoi impossible : " + errText(e) }) }
         setBusy(""); sending.current = false
     }
@@ -131,7 +139,7 @@ export default function PaymentPanel({ username, ready, account, client }: Props
                     <ul className="text-sm space-y-1">
                         <li>• Tu envoies <b>{preview.label} USDC</b> (jetons de test, aucune valeur réelle) à <code>{fmtAddr(preview.to)}</code>.</li>
                         <li>• Solde après : <b>{fromUnits(preview.balance >= preview.units ? preview.balance - preview.units : BigInt(0))} USDC</b>.</li>
-                        <li>• Frais de réseau : <b>0</b> pour toi (payés par Swissquote, « gasless »).</li>
+                        <li>• Frais de réseau : <b>0</b> pour toi (payés par Swissquote, « gasless »){gas && <> · opérations gratuites aujourd'hui : <b>{gas.walletUsed}/{gas.walletQuota}</b></>}.</li>
                         <li>• Simulation de la transaction : {preview.simulationOk ? <b className="text-green-400">elle réussirait ✅</b> : <b className="text-red-400">elle échouerait ❌ — {preview.simulationError}</b>}</li>
                         <li>• Contrôle de l'adresse (Swissquote, <MockBadge />) : {preview.flagged ? <b className="text-red-400">⚠️ {preview.flagReason}</b> : <b className="text-green-400">aucun signalement ✅</b>}</li>
                         <li>• Niveau de contrôle : {preview.large ? <b className="text-amber-300">GROS montant → passkey + confirmation de l'appareil de secours</b> : <b>petit montant → passkey seul</b>}</li>

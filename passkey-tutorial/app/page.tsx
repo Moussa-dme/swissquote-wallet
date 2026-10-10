@@ -17,7 +17,7 @@ import { createPublicClient, http, parseAbi, encodeFunctionData } from "viem"
 import { sepolia } from "viem/chains"
 import OwnerRecoveryPanel from "./components/OwnerRecoveryPanel"
 import { Btn, Card, Input, Msg, Pill } from "./components/ui"
-import { coord, fmtAddr } from "@/lib/recovery"
+import { coord, fmtAddr, gasStationUrl } from "@/lib/recovery"
 import PaymentPanel from "./components/PaymentPanel"
 import SwissquoteLinkPanel from "./components/SwissquoteLinkPanel"
 
@@ -86,10 +86,11 @@ export default function Home() {
             bundlerTransport: http(ZERODEV_RPC_URL),
             paymaster: {
                 getPaymasterData: async (userOperation) => {
+                    // sponsoring via la « gas station » (quotas anti-abus), pas directement chez ZeroDev
                     const zeroDevPaymaster = await createZeroDevPaymasterClient(
                         {
                             chain: CHAIN,
-                            transport: http(ZERODEV_RPC_URL),
+                            transport: http(gasStationUrl()),
                         }
                     )
                     return zeroDevPaymaster.sponsorUserOperation({

@@ -50,9 +50,12 @@ export const ROLE_LABEL: Record<Role, string> = {
 
 export const publicClient = createPublicClient({ chain: CHAIN, transport: http(RPC_URL) })
 
+// Le sponsoring des frais passe par la « gas station » (MOCK, app/api/gas) qui applique des quotas anti-abus
+// avant d'appeler le paymaster ZeroDev (dont l'adresse reste côté serveur).
+export const gasStationUrl = () => (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000") + "/api/gas"
 const paymaster = {
     getPaymasterData: async (userOperation: any) => {
-        const pm = createZeroDevPaymasterClient({ chain: CHAIN, transport: http(RPC_URL) })
+        const pm = createZeroDevPaymasterClient({ chain: CHAIN, transport: http(gasStationUrl()) })
         return pm.sponsorUserOperation({ userOperation })
     }
 }
