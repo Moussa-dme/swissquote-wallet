@@ -138,7 +138,9 @@
     classDef ext fill:#bfdbfe,stroke:#1d4ed8,color:#172554
     APP[&quot;App du client&quot;]:::real --&gt;|&quot;demande de sponsoring&quot;| G[&quot;Gas station (MOCK)&lt;br/&gt;1. quota par wallet et par jour&lt;br/&gt;2. plafond global quotidien&lt;br/&gt;3. plafond de gaz par opération&lt;br/&gt;4. seule méthode autorisée : sponsoriser&quot;]:::mock
     G --&gt;|&quot;accepté&quot;| P[&quot;Paymaster ZeroDev&lt;br/&gt;(Swissquote paie)&quot;]:::ext
-    G --&gt;|&quot;refusé : quota ou plafond&quot;| N[&quot;Le client paie ses frais&lt;br/&gt;ou réessaie demain&quot;]:::real
+    G --&gt;|&quot;quota épuisé ou choix du client&quot;| U[&quot;Option : le client paie ses frais en USDC&lt;br/&gt;(l&#x27;USDC est le seul jeton accepté, aucun coût pour Swissquote)&quot;]:::real
+    U --&gt; P
+    G --&gt;|&quot;plafond de gaz ou plafond global dépassé&quot;| N[&quot;Refusé : réessayer plus tard&quot;]:::real
 </pre>
 <h2>8. Ce qui est réel, ce qui est simulé</h2>
 <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,theme:"neutral",flowchart:{htmlLabels:true,useMaxWidth:true},sequence:{useMaxWidth:true}});</script>

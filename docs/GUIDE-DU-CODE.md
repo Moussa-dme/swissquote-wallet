@@ -23,7 +23,7 @@ Chacun tient en **une phrase** que tu peux dire au jury.
 | 4 | **Swissquote = 1 voix, en personne** | « Le faux serveur ne signe qu'après la validation d'un agent en agence ; un code SMS est refusé ; il reconstruit lui-même l'opération avant de signer. » | `mock-swissquote/server.mjs` (routes `/cases`, `/otp`, `/desk`, `/approve`) |
 | 5 | **Petit / gros montant** | « Au-dessus du seuil, il faut Touch ID **et** la confirmation du second appareil, qui signe ce paiement précis. » | `lib/policy.ts`, `app/components/PaymentPanel.tsx`, routes `payments` du coordinateur |
 | 6 | **Preuve de propriété (Travel Rule)** | « Swissquote envoie un message unique ; le wallet le signe ; elle vérifie la signature sur la blockchain, sans voir de clé ; un retrait n'est possible que vers un wallet prouvé. » | `mock-swissquote/server.mjs` (`/wallet/challenge`, `/wallet/link`, `/withdraw`), `app/components/SwissquoteLinkPanel.tsx` |
-| 7 | **Gas station (anti-abus)** | « Un service avant le paymaster applique un quota par wallet, un plafond global et un plafond de gaz. » | `lib/gas.ts`, `app/api/gas/route.ts` |
+| 7 | **Gas station (anti-abus) + frais en USDC** | « Un service avant le paymaster applique un quota par wallet, un plafond global et un plafond de gaz ; quand le quota gratuit est épuisé, le client peut payer ses frais en USDC, ce qui ne coûte rien à Swissquote. » | `lib/gas.ts`, `app/api/gas/route.ts` |
 | 8 | **dApps : empreinte du code** | « Le wallet recalcule l'empreinte du code d'un contrat sur la blockchain et la compare à celle approuvée : même adresse ne veut pas dire même code. » | `lib/dapps.ts`, `app/components/DappPanel.tsx` |
 
 ## 3. Où est la preuve de chaque promesse
@@ -76,7 +76,7 @@ Les **scripts de test** (dossier `spike/`) sont la meilleure documentation : cha
 13. *Comment Swissquote gagne de l'argent ?* Rétention, service de récupération payant, abonnement « gas station » ; le pourcentage des actifs seul est négligeable (voir `BUSINESS.md`).
 
 **Bonus**
-14. *Comment évitez-vous l'abus de frais ?* Quotas par wallet et globaux, plafond de gaz ; limite : contournable en dehors de l'app tant que la règle ZeroDev n'est pas durcie.
+14. *Comment évitez-vous l'abus de frais ?* Quotas par wallet et globaux, plafond de gaz, et une option « payer ses frais en USDC » quand le quota est épuisé ; limite : contournable en dehors de l'app tant que la règle ZeroDev n'est pas durcie.
 15. *Pourquoi l'empreinte du code ?* Parce qu'un contrat modifiable garde la même adresse ; le wallet recalcule l'empreinte lui-même.
 
 ## 7. Ce qui est simulé (à dire clairement)

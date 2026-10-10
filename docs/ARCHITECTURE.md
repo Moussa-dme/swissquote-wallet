@@ -169,7 +169,9 @@ flowchart LR
     classDef ext fill:#bfdbfe,stroke:#1d4ed8,color:#172554
     APP["App du client"]:::real -->|"demande de sponsoring"| G["Gas station (MOCK)<br/>1. quota par wallet et par jour<br/>2. plafond global quotidien<br/>3. plafond de gaz par opération<br/>4. seule méthode autorisée : sponsoriser"]:::mock
     G -->|"accepté"| P["Paymaster ZeroDev<br/>(Swissquote paie)"]:::ext
-    G -->|"refusé : quota ou plafond"| N["Le client paie ses frais<br/>ou réessaie demain"]:::real
+    G -->|"quota épuisé ou choix du client"| U["Option : le client paie ses frais en USDC<br/>(l'USDC est le seul jeton accepté, aucun coût pour Swissquote)"]:::real
+    U --> P
+    G -->|"plafond de gaz ou plafond global dépassé"| N["Refusé : réessayer plus tard"]:::real
 ```
 
 ## 8. Ce qui est réel, ce qui est simulé

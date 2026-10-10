@@ -10,6 +10,9 @@ import { SWISSQUOTE_URL, coord, errText, fmtAddr, kernelClientPayingInUsdc, publ
 import { SMALL_LIMIT_USDC, USDC, erc20Abi, fromUnits, isLarge, toUnits } from "@/lib/policy"
 import { Btn, Card, Input, MockBadge, Msg, countdown, useNow } from "./ui"
 
+// marge de solde exigée quand les frais sont payés en USDC (frais mesurés ≈ 1,5 USDC)
+const FEE_MARGIN = BigInt(3_000_000)
+
 type Props = { username: string; ready: boolean; account: any; client: any }
 type Preview = {
     to: Address; units: bigint; label: string; large: boolean; balance: bigint
@@ -149,7 +152,7 @@ export default function PaymentPanel({ username, ready, account, client }: Props
                     <ul className="text-sm space-y-1">
                         <li>• Tu envoies <b>{preview.label} USDC</b> (jetons de test, aucune valeur réelle) à <code>{fmtAddr(preview.to)}</code>.</li>
                         <li>• Solde après : <b>{fromUnits(preview.balance >= preview.units ? preview.balance - preview.units : BigInt(0))} USDC</b>.</li>
-                        <li>• Frais de réseau : {payGasUsdc ? <><b>payés par toi en USDC</b> (quelques centimes, prélevés en plus du montant)</> : <><b>0</b> pour toi (payés par Swissquote, « gasless »){gas && <> · opérations gratuites aujourd'hui : <b>{gas.walletUsed}/{gas.walletQuota}</b></>}</>}.</li>
+                        <li>• Frais de réseau : {payGasUsdc ? <><b>payés par toi en USDC</b> (≈ 1,5 USDC mesurés sur le réseau de test, prélevés en plus du montant)</> : <><b>0</b> pour toi (payés par Swissquote, « gasless »){gas && <> · opérations gratuites aujourd'hui : <b>{gas.walletUsed}/{gas.walletQuota}</b></>}</>}.</li>
                         <li>• Simulation de la transaction : {preview.simulationOk ? <b className="text-green-400">elle réussirait ✅</b> : <b className="text-red-400">elle échouerait ❌ — {preview.simulationError}</b>}</li>
                         <li>• Contrôle de l'adresse (Swissquote, <MockBadge />) : {preview.flagged ? <b className="text-red-400">⚠️ {preview.flagReason}</b> : <b className="text-green-400">aucun signalement ✅</b>}</li>
                         <li>• Niveau de contrôle : {preview.large ? <b className="text-amber-300">GROS montant → passkey + confirmation de l'appareil de secours</b> : <b>petit montant → passkey seul</b>}</li>
@@ -160,11 +163,11 @@ export default function PaymentPanel({ username, ready, account, client }: Props
                     </label>
                     {preview.flagged && <Msg kind="err">Swissquote te prévient mais ne bloque pas ton paiement : tes fonds restent sous ton seul contrôle. Es-tu certain de vouloir continuer ?</Msg>}
                     {!waiting && (
-                        <Btn tone={preview.large ? "purple" : "green"} onClick={send} busy={busy === "send" || busy === "ask"} disabled={!preview.simulationOk || preview.balance < preview.units}>
+                        <Btn tone={preview.large ? "purple" : "green"} onClick={send} busy={busy === "send" || busy === "ask"} disabled={!preview.simulationOk || preview.balance < preview.units + (payGasUsdc ? FEE_MARGIN : BigInt(0))}>
                             {preview.large ? "Demander la confirmation de l'appareil de secours" : "Envoyer (Touch ID)"}
                         </Btn>
                     )}
-                    {preview.balance < preview.units && <Msg kind="err">Solde insuffisant.</Msg>}
+                    {preview.balance < preview.units + (payGasUsdc ? FEE_MARGIN : BigInt(0)) && <Msg kind="err">Solde insuffisant{payGasUsdc ? " : pour payer les frais en USDC, il faut le montant plus environ 3 USDC de marge" : ""}.</Msg>}
                 </Card>
             )}
 

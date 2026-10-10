@@ -71,6 +71,7 @@ Clés de l'appareil de secours et du contact dans le navigateur ; KYC en agence 
 ZeroDev fournit le compte intelligent, le serveur de passkeys, le bundler et le paymaster. Il ne peut **pas** signer à la place du client ni déplacer ses fonds, mais il peut refuser de sponsoriser des frais ou être indisponible. La clé publique du client est enregistrée sur la blockchain, qui fait foi.
 
 ### 3.9 Gas station et registre de dApps (limites des bonus)
+- **Frais en USDC** : le paymaster prélève ses frais en USDC après une autorisation donnée par le wallet (jusqu'à 5 USDC par opération) ; un client doit garder une marge de solde (≈ 3 USDC). Le coût est celui du paymaster, élevé pour les opérations avec passkey.
 - **Gas station** : elle limite l'abus quand l'app est utilisée normalement, mais la politique du tableau de bord ZeroDev reste « tout sponsoriser » (son webhook ne peut pas joindre un serveur local) : un client modifié pourrait appeler le paymaster directement. En production : politique appliquée chez ZeroDev, clé gardée côté serveur, wallets liés à des clients KYC.
 - **Wallets en série** : un attaquant peut créer beaucoup de wallets ; le plafond global limite la perte, et la liaison à un client Swissquote (KYC) la supprimerait.
 - **Registre de dApps** : il est simulé ; la vérification de l'empreinte est réelle, mais ne couvre pas les changements de comportement dus à des données externes (oracles) ni les failles déjà présentes dans le code approuvé.

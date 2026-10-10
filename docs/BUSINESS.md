@@ -38,6 +38,8 @@
 | Coût : assurance | — | **aucune** (mentor) | 0 |
 | **Marge directe** | revenus − coûts | | **≈ 45 500 CHF** |
 
+> **Mesure réelle (important pour l'hypothèse de gas).** Sur Sepolia, le paymaster de ZeroDev a facturé **≈ 1,1 à 1,5 USDC** pour une opération avec passkey (la vérification d'un passkey consomme beaucoup de gaz, et le tarif est converti au prix de l'ETH). Notre hypothèse de **0,05 CHF** par transaction est donc **probablement optimiste** pour un réseau principal (couche 1). *Sensibilité (illustrative)* : à **1 CHF** par transaction, 20 transactions par client et par an coûtent **20 CHF**, soit **20 000 CHF** pour 1 000 clients, contre 50 000 CHF de revenus de récupération dans le modèle. D'où trois leviers : un réseau moins cher (couche 2), le **quota gratuit** plafonné, et l'option **« payer ses frais en USDC »** (coût nul pour la banque) au-delà du quota. **[À RECALCULER avec la chaîne retenue.]**
+
 **Ce que le modèle montre** : le **pourcentage des actifs** (500 CHF) est **négligeable** ; la valeur vient du **service payant** et surtout de la **rétention** (les actifs et le trading qui **ne partent pas**), qu'il faut valoriser avec les données de la banque : *rétention = clients retenus × actifs × marge de la banque sur ces actifs*. **[À CHIFFRER avec des données internes ou une hypothèse assumée.]**
 
 ## Risques (ratio bénéfice / risque)

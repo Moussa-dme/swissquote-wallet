@@ -29,15 +29,21 @@ try {
     const pm = createZeroDevPaymasterClient({ chain: sepolia, transport: http(GAS) })
     const client = createKernelAccountClient({ account, chain: sepolia, bundlerTransport: http(RPC), paymaster: { getPaymasterData: (userOperation) => pm.sponsorUserOperation({ userOperation, gasToken: USDC }) } })
     const u0 = await usage()
-    const approve = await getERC20PaymasterApproveCall(pm, { gasToken: USDC, approveAmount: 1_000_000n, entryPoint })
+    const approve = await getERC20PaymasterApproveCall(pm, { gasToken: USDC, approveAmount: 5_000_000n, entryPoint })
     const transfer = { to: USDC, value: 0n, data: encodeFunctionData({ abi: erc20, functionName: "transfer", args: ["0x2222222222222222222222222222222222222222", 1_000_000n] }) }
     const h = await client.sendUserOperation({ callData: await account.encodeCalls([approve, transfer]) })
     const r = await client.waitForUserOperationReceipt({ hash: h })
     ok("opération avec frais payés en USDC exécutée", r.success)
     const b1 = await bal(), spent = Number(b0 - b1) / 1e6
-    ok("le wallet a payé le transfert (1 USDC) + des frais en USDC", spent > 1 && spent < 2, `→ dépensé ${spent} USDC dont ≈ ${(spent - 1).toFixed(4)} de frais`)
+    ok("le wallet a payé le transfert (1 USDC) + des frais en USDC", spent > 1 && spent < 4, `→ dépensé ${spent} USDC dont ≈ ${(spent - 1).toFixed(4)} de frais`)
     const eth = await pc.getBalance({ address: W })
     ok("le wallet n'a toujours aucun ETH", eth === 0n)
     const u1 = await usage()
     ok("aucun quota gratuit consommé, opération comptée comme payée", u1.walletUsed === u0.walletUsed && u1.paidInUsdcToday > (u0.paidInUsdcToday ?? 0), `→ gratuits ${u1.walletUsed}, payées en USDC aujourd'hui ${u1.paidInUsdcToday}`)
-} catch (e) { console.log("ÉCHEC :", String(e.details ?? e.shortMessage ?? e.message).replace(/[0-9a-f]{8}-[0-9a-f-]{27}/g, "<ID>").slice(0, 400)); process.exitCode = 1 }
+} catch (e) {
+    const clean = (x) => String(x ?? "").replace(/[0-9a-f]{8}-[0-9a-f-]{27}/g, "<ID>").slice(0, 500)
+    console.log("ÉCHEC :", clean(e.shortMessage ?? e.message))
+    console.log("  détails :", clean(e.details)); console.log("  cause :", clean(e.cause?.message ?? e.cause?.details))
+    if (process.env.DEBUG) console.log(clean(e.stack))
+    process.exitCode = 1
+}
