@@ -8,7 +8,9 @@ import { encodeFunctionData, parseAbi } from "viem"
 import {
     SWISSQUOTE_URL, ROLE_LABEL, api, buildRecoveryCallData, coord, errText, fmtAddr, passkeyValidatorFor, passkeyValidatorFromSerialized, recoveredWallet
 } from "@/lib/recovery"
-import { Btn, Card, Input, MockBadge, Msg, RoleHeader, countdown, useNow } from "../components/ui"
+import { Btn, Card, Input, MockBadge, Msg, Pill, RoleHeader, countdown, useNow } from "../components/ui"
+import OwnerRecoveryPanel from "../components/OwnerRecoveryPanel"
+import DappPanel from "../components/DappPanel"
 import PaymentPanel from "../components/PaymentPanel"
 import SwissquoteLinkPanel from "../components/SwissquoteLinkPanel"
 
@@ -28,6 +30,9 @@ export default function RecoverPage() {
     const [msg, setMsg] = useState<{ kind: "ok" | "err" | "info"; text: string } | null>(null)
     const [sqMsg, setSqMsg] = useState<{ kind: "ok" | "err" | "info"; text: string } | null>(null)
     const [wallet, setWallet] = useState<any>(null)
+    const [advanced, setAdvanced] = useState(false)
+    const [details, setDetails] = useState(false)
+    const [copied, setCopied] = useState(false)
     const now = useNow()
 
     useEffect(() => { setUsername(ls.get("sq-recover-username")) }, [])
@@ -124,7 +129,95 @@ export default function RecoverPage() {
         setBusy("")
     }
 
+    const copyAddress = async () => {
+        try { await navigator.clipboard.writeText(setup.account); setCopied(true); setTimeout(() => setCopied(false), 1500) } catch {}
+    }
+
     const waiting = req?.status === "pending" && now < req.readyAt
+    const recovered = req?.status === "executed"
+    const approvals = req && (
+        <>
+            <p className="text-sm">Demande <b>{req.id}</b> — statut : <b>{req.status === "pending" ? "en cours" : req.status === "executed" ? "exécutée ✅" : "annulée ❌"}</b></p>
+            <p className="text-sm">Approbations : <b>{req.approvedBy.length}/3</b> (2 requises) — {req.approvedBy.map((r: string) => ROLE_LABEL[r as keyof typeof ROLE_LABEL]).join(", ") || "aucune"}</p>
+        </>
+    )
+
+    // ---------- ÉTAT C : le wallet est récupéré ET connecté : on retrouve l'interface normale ----------
+    if (wallet && setup) {
+        return (
+            <main className="min-h-screen px-4 py-8 sm:py-12">
+                <div className="w-full max-w-lg mx-auto space-y-4">
+                    <header className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-2xl font-semibold tracking-tight">Swissquote Wallet</h1>
+                            <p className="text-xs text-slate-400">Leurs clés, leur contrôle, à un pas de leur compte Swissquote.</p>
+                        </div>
+                        <Pill tone="amber">Réseau de test</Pill>
+                    </header>
+                    <Card tone="ok">
+                        <div className="flex items-start justify-between gap-2">
+                            <div>
+                                <p className="text-sm text-slate-300">Wallet récupéré ✅</p>
+                                <p className="text-xl font-semibold">{username}</p>
+                            </div>
+                            <Pill tone="green">🔒 Nouveau passkey</Pill>
+                        </div>
+                        <div className="flex items-center justify-between gap-2 text-sm">
+                            <span className="text-slate-300">Adresse : <code>{fmtAddr(setup.account)}</code></span>
+                            <span className="space-x-3">
+                                <button className="text-sky-300 hover:text-sky-200" onClick={copyAddress}>{copied ? "copié ✓" : "copier"}</button>
+                                <a className="text-sky-300 hover:text-sky-200" target="_blank" rel="noopener noreferrer" href={`https://sepolia.etherscan.io/address/${setup.account}`}>voir sur la blockchain</a>
+                            </span>
+                        </div>
+                        <p className="text-sm text-slate-300">Même adresse, mêmes fonds. Ton ancien appareil n'a plus aucun accès.</p>
+                    </Card>
+
+                    <PaymentPanel username={username} ready={true} account={wallet.account} client={wallet.client} />
+
+                    <button className="w-full text-sm text-sky-300 hover:text-sky-200 py-2" onClick={() => setAdvanced(!advanced)}>
+                        {advanced ? "▲ Masquer le mode avancé" : "▼ Mode avancé : récupération, compte Swissquote, applications"}
+                    </button>
+                    {advanced && (
+                        <div className="space-y-4">
+                            <OwnerRecoveryPanel username={username} accountAddress={setup.account} ready={true} kernelClient={wallet.client} kernelAccount={wallet.account} />
+                            <SwissquoteLinkPanel ready={true} account={wallet.account} />
+                            <DappPanel username={username} ready={true} account={wallet.account} client={wallet.client} />
+                            <Card title="Transaction de test">
+                                <Btn tone="green" onClick={testTx} busy={busy === "tx"}>Envoyer une transaction de test (gasless)</Btn>
+                            </Card>
+                        </div>
+                    )}
+
+                    <button className="w-full text-xs text-slate-400 hover:text-slate-200 py-1" onClick={() => setDetails(!details)}>
+                        {details ? "▲ Masquer les détails de la récupération" : "▼ Détails de la récupération qui vient d'avoir lieu"}
+                    </button>
+                    {details && <Card title="Récupération effectuée">{approvals}<p className="text-xs text-slate-400">Gardiens : {(["backup", "contact", "swissquote"] as const).map((r) => ROLE_LABEL[r]).join(", ")}.</p></Card>}
+                    {msg && <Msg kind={msg.kind}>{msg.text}</Msg>}
+                </div>
+            </main>
+        )
+    }
+
+    // ---------- ÉTAT B : la récupération est terminée, il reste à se connecter avec le nouveau passkey ----------
+    if (recovered && setup) {
+        return (
+            <main className="min-h-screen px-4 py-12">
+                <div className="max-w-lg mx-auto space-y-4">
+                    <RoleHeader emoji="🎉" title="Récupération terminée" subtitle="Les gardiens ont remplacé la clé qui contrôle ton wallet. Il ne reste qu'à te connecter avec ton nouveau passkey." />
+                    <Card tone="ok">
+                        <p className="text-sm">Wallet : <code>{fmtAddr(setup.account)}</code> · {approvals}</p>
+                        <Btn onClick={useWallet} busy={busy === "wallet"}>Me connecter avec mon nouveau passkey</Btn>
+                    </Card>
+                    <button className="w-full text-xs text-slate-400 hover:text-slate-200 py-1" onClick={() => { ls.set(`sq-recover-req-${username}`, ""); setReqId("") }}>
+                        J'ai de nouveau perdu mon appareil : faire une nouvelle récupération
+                    </button>
+                    {msg && <Msg kind={msg.kind}>{msg.text}</Msg>}
+                </div>
+            </main>
+        )
+    }
+
+    // ---------- ÉTAT A : récupération à faire ou en cours ----------
     return (
         <main className="min-h-screen px-4 py-12">
             <div className="max-w-lg mx-auto space-y-4">
@@ -139,15 +232,10 @@ export default function RecoverPage() {
                 </Card>
 
                 <Card title="2. Nouveau passkey sur cet appareil">
-                    {(!req || req.status !== "pending") && <Btn onClick={start} busy={busy === "start"} disabled={!setup}>{req ? "Faire une NOUVELLE demande de récupération (nouveau passkey)" : "Créer un nouveau passkey et demander la récupération"}</Btn>}
-                    {req && (
-                        <>
-                            <p className="text-sm">Demande <b>{req.id}</b> — statut : <b>{req.status === "pending" ? "en cours" : req.status === "executed" ? "exécutée ✅" : "annulée ❌"}</b></p>
-                            <p className="text-sm">Approbations : <b>{req.approvedBy.length}/3</b> (2 requises) — {req.approvedBy.map((r: string) => ROLE_LABEL[r as keyof typeof ROLE_LABEL]).join(", ") || "aucune"}</p>
-                            {req.status === "pending" && <p className="text-sm">{waiting ? <>⏳ Délai de sécurité : <b>{countdown(req.readyAt - now)}</b> (le propriétaire actuel peut annuler)</> : "✅ Délai de sécurité écoulé : un gardien peut finaliser."}</p>}
-                            {req.status === "cancelled" && <Msg kind="err">Le propriétaire a annulé cette demande.</Msg>}
-                        </>
-                    )}
+                    {(!req || req.status === "cancelled") && <Btn onClick={start} busy={busy === "start"} disabled={!setup}>{req ? "Faire une NOUVELLE demande de récupération (nouveau passkey)" : "Créer un nouveau passkey et demander la récupération"}</Btn>}
+                    {approvals}
+                    {req?.status === "pending" && <p className="text-sm">{waiting ? <>⏳ Délai de sécurité : <b>{countdown(req.readyAt - now)}</b> (le propriétaire actuel peut annuler)</> : "✅ Délai de sécurité écoulé : un gardien peut finaliser."}</p>}
+                    {req?.status === "cancelled" && <Msg kind="err">Le propriétaire a annulé cette demande.</Msg>}
                 </Card>
 
                 <Card title="3. Approbation de Swissquote" tone="mock">
@@ -165,15 +253,9 @@ export default function RecoverPage() {
 
                 <Card title="4. Les autres gardiens">
                     <p className="text-sm">Ton appareil de secours ou ton contact de confiance ouvre <b>/guardian</b>, approuve cette demande, puis (une fois le délai écoulé) un des deux clique sur « Finaliser ». <b>Swissquote n'est pas nécessaire</b> : 2 gardiens sur 3 suffisent, même si Swissquote disparaît.</p>
-                </Card>
-
-                <Card title="5. Utiliser mon wallet">
-                    <Btn onClick={useWallet} busy={busy === "wallet"} disabled={req?.status !== "executed"}>Me connecter avec le nouveau passkey</Btn>
-                    <Btn tone="green" onClick={testTx} busy={busy === "tx"} disabled={!wallet}>Envoyer une transaction test (gasless)</Btn>
+                    <p className="text-xs text-slate-400">Quand la récupération sera exécutée, cette page te proposera de te connecter avec ton nouveau passkey.</p>
                 </Card>
                 {msg && <Msg kind={msg.kind}>{msg.text}</Msg>}
-                {wallet && <SwissquoteLinkPanel ready={true} account={wallet.account} />}
-                {wallet && <PaymentPanel username={username} ready={true} account={wallet.account} client={wallet.client} />}
             </div>
         </main>
     )

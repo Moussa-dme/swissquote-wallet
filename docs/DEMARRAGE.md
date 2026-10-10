@@ -186,9 +186,8 @@ Tu peux tester **deux variantes**. Fais-les sur des noms différents.
 
 ### Étape 8 : utiliser le wallet récupéré (Navigateur B, `/recover`)
 
-1. La demande indique **« exécutée ✅ »**.
-2. Clique sur **Me connecter avec le nouveau passkey** (Touch ID). *S'il te propose plusieurs passkeys, choisis celui dont le nom commence par `Alice-recovered-`.*
-3. Clique sur **Envoyer une transaction test (gasless)** (Touch ID) : message vert « ✅ Transaction signée avec le NOUVEAU passkey, depuis le même wallet ».
+1. Quand la récupération est exécutée, la page `/recover` **change d'écran** : « 🎉 Récupération terminée ». Clique sur **Me connecter avec mon nouveau passkey** (Touch ID). *S'il te propose plusieurs passkeys, choisis celui dont le nom commence par `Alice-recovered-`.*
+2. Tu arrives sur **l'interface normale du wallet** (comme sur l'accueil) : « Wallet récupéré ✅ », même adresse, **Envoyer des USDC**, et le **mode avancé**. Envoie un petit paiement ou, dans **Mode avancé → Transaction de test**, une transaction de test : elle est signée avec le **nouveau** passkey, depuis le **même** wallet.
 
 ### Étape 9 : vérifier que l'ancien appareil est bloqué (Navigateur A)
 
