@@ -4,6 +4,8 @@
 // En production : un passkey / une clé matérielle sur l'appareil de secours, une app pour le contact.
 import React, { useCallback, useEffect, useState } from "react"
 import { Hex } from "viem"
+import { privateKeyToAccount } from "viem/accounts"
+import { paymentMessage } from "@/lib/policy"
 import {
     Guardians, ROLE_LABEL, addressOf, approveRecovery, coord, errText, finalizeRecovery, fmtAddr, newGuardianKey
 } from "@/lib/recovery"
@@ -87,6 +89,21 @@ export default function GuardianPage() {
     }
 
     const requests: any[] = state?.requests ?? []
+    const payments: any[] = (state?.payments ?? []).filter((x: any) => x.status === "pending" && x.expiresAt > now)
+
+    // Gros paiement : l'appareil de secours confirme (ou refuse) un paiement précis en le signant
+    const confirmPayment = async (pay: any) => {
+        if (!pk) return
+        setBusy("p" + pay.id); setMsg(null)
+        try {
+            const signature = await privateKeyToAccount(pk).signMessage({ message: paymentMessage(pay.id, pay.to, pay.amountLabel) })
+            const r = await coord(`payments/${pay.id}/approve`, { signature })
+            setMsg(r.ok ? { kind: "ok", text: "Paiement confirmé depuis l'appareil de secours. Le propriétaire peut le signer avec son passkey." } : { kind: "err", text: r.data.error })
+            refresh()
+        } catch (e) { setMsg({ kind: "err", text: errText(e) }) }
+        setBusy("")
+    }
+    const refusePayment = async (pay: any) => { await coord(`payments/${pay.id}/refuse`, {}); refresh() }
 
     return (
         <main className="min-h-screen px-4 py-12">
@@ -108,6 +125,26 @@ export default function GuardianPage() {
 
                 {setup && !imInSetup && registered && (
                     <Msg kind="err">Cette clé n'est pas celle utilisée à l'installation de la récupération (une autre clé a été enregistrée). Elle ne comptera pas parmi les gardiens.</Msg>
+                )}
+
+                {role === "backup" && (
+                    <Card title="Confirmation des gros paiements" tone={payments.length ? "warn" : "default"}>
+                        {!setup && <p className="text-sm text-gray-400">Disponible une fois la récupération installée.</p>}
+                        {setup && payments.length === 0 && <p className="text-sm text-gray-400">Aucun gros paiement en attente de confirmation.</p>}
+                        {payments.map((pay) => (
+                            <div key={pay.id} className="space-y-2">
+                                <p className="text-sm">
+                                    <b>{username}</b> veut envoyer <b>{pay.amountLabel} USDC</b> à <code>{fmtAddr(pay.to)}</code>.
+                                    C'est un <b>gros montant</b> : ton passkey ne suffit pas, ton appareil de secours doit confirmer.
+                                </p>
+                                <Msg kind="info">Confirme seulement si c'est bien le propriétaire qui fait ce paiement (appelle-le si tu n'es pas sûr). Dans le doute, refuse.</Msg>
+                                <div className="flex gap-2">
+                                    <Btn tone="green" onClick={() => confirmPayment(pay)} busy={busy === "p" + pay.id} disabled={!imInSetup}>Confirmer ce paiement</Btn>
+                                    <Btn tone="red" onClick={() => refusePayment(pay)}>Refuser</Btn>
+                                </div>
+                            </div>
+                        ))}
+                    </Card>
                 )}
 
                 <Card title="Demandes de récupération">

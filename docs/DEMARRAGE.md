@@ -202,6 +202,26 @@ Retourne sur `http://localhost:3000` et clique sur **Send UserOp** : tu dois obt
 
 ---
 
+## 6 bis. Scénario E : petit vs gros paiement (USDC)
+
+*Montre que le contrôle dépend du montant : un petit paiement demande Touch ID, un gros paiement demande en plus la confirmation d'un second appareil.*
+
+**Préparation (une fois)** : il faut un wallet avec des USDC de test.
+1. Fais les étapes 1 à 4 (wallet créé, appareil de secours enregistré, récupération installée), avec un nom neuf.
+2. Copie l'**adresse du wallet** (affichée en haut de la page d'accueil, navigateur A).
+3. Va sur <https://faucet.circle.com>, choisis le réseau **Ethereum Sepolia** et la monnaie **USDC**, colle l'adresse du wallet et valide. Attends environ une minute, puis clique sur **actualiser** dans le panneau « Envoyer des USDC » : le solde doit passer à environ 10 USDC.
+
+**Dans le panneau « Envoyer des USDC »** (page d'accueil, navigateur A) :
+- **Petit montant (≤ 5 USDC)** : clique sur « adresse normale », saisis `1`, clique sur **Vérifier**. Un **résumé en langage clair** s'affiche (montant, destinataire, solde après, frais à 0, simulation, contrôle de l'adresse). Clique sur **Envoyer (Touch ID)** : une seule authentification suffit.
+- **Gros montant (> 5 USDC)** : saisis `8`, clique sur **Vérifier**. Le niveau indiqué est « GROS montant → passkey + confirmation de l'appareil de secours ». Clique sur **Demander la confirmation de l'appareil de secours**. Dans le **navigateur B**, ouvre `/guardian`, onglet **Appareil de secours** (même nom d'utilisateur) : la carte « Confirmation des gros paiements » montre la demande ; clique sur **Confirmer ce paiement**. Retour dans le navigateur A : Touch ID s'ouvre tout seul pour signer, puis l'envoi se fait.
+- **Adresse signalée** : clique sur « adresse signalée (MOCK) » : le résumé affiche un **avertissement** de Swissquote. Le paiement reste **possible** : Swissquote prévient mais ne bloque pas (elle n'a aucun pouvoir sur les fonds).
+
+Après une récupération, le **même** panneau apparaît sur `/recover` une fois connecté avec le nouveau passkey : un gros paiement exige toujours l'appareil de secours.
+
+> **Limite à connaître** : cette règle est appliquée par l'application et le coordinateur (simulation). En production, elle serait appliquée directement par le wallet sur la blockchain (plafond on-chain ou co-signature).
+
+---
+
 ## 7. Ce que tu dois observer (pour le pitch et le produit)
 
 Pendant que tu testes, note :
@@ -222,6 +242,9 @@ Pendant que tu testes, note :
 | Clés de l'appareil de secours et du contact | **MOCK** : stockées dans le navigateur (en production : passkey / clé matérielle) |
 | Gardien « Swissquote » | **MOCK** : un petit serveur à part, avec sa propre clé |
 | Vérification d'identité en agence (KYC) | **MOCK** : la page `/desk` joue l'agent |
+| Contrôle petit / gros montant (confirmation du second appareil) | **Appliqué par l'app et le coordinateur** (simulation) ; en production : on-chain |
+| Contrôle des adresses destinataires (adresses signalées) | **MOCK** : liste inventée dans le faux serveur Swissquote ; avertit, ne bloque pas |
+| USDC de test | **Réel** sur Sepolia (jeton de test Circle, sans valeur) |
 | Délai de sécurité annulable | **Appliqué hors chaîne** (par notre coordinateur) : limite à expliquer ; en production, un délai sur la blockchain |
 | Délai de 60 s | Démo ; en production : 48 h |
 

@@ -1,0 +1,158 @@
+"use client"
+// Envoi d'USDC avec contrôle selon le montant :
+//   - petit montant  : passkey seul (Touch ID) ;
+//   - gros montant   : passkey + confirmation du SECOND APPAREIL (appareil de secours) après lecture d'un résumé.
+// Avant toute signature : simulation de la transaction (elle ne doit pas échouer) + contrôle de l'adresse
+// destinataire par Swissquote (MOCK) qui AVERTIT mais ne bloque jamais (aucun pouvoir sur les fonds).
+import React, { useCallback, useEffect, useRef, useState } from "react"
+import { Address, encodeFunctionData, isAddress } from "viem"
+import { SWISSQUOTE_URL, coord, errText, fmtAddr, publicClient } from "@/lib/recovery"
+import { SMALL_LIMIT_USDC, USDC, erc20Abi, fromUnits, isLarge, toUnits } from "@/lib/policy"
+import { Btn, Card, Input, MockBadge, Msg, countdown, useNow } from "./ui"
+
+type Props = { username: string; ready: boolean; account: any; client: any }
+type Preview = {
+    to: Address; units: bigint; label: string; large: boolean; balance: bigint
+    simulationOk: boolean; simulationError?: string; flagged: boolean; flagReason?: string
+}
+
+export default function PaymentPanel({ username, ready, account, client }: Props) {
+    const [to, setTo] = useState("")
+    const [amount, setAmount] = useState("")
+    const [balance, setBalance] = useState<bigint | null>(null)
+    const [preview, setPreview] = useState<Preview | null>(null)
+    const [paymentId, setPaymentId] = useState("")
+    const [state, setState] = useState<any>(null)
+    const [busy, setBusy] = useState("")
+    const [msg, setMsg] = useState<{ kind: "ok" | "err" | "info"; text: string } | null>(null)
+    const sending = useRef(false)
+    const now = useNow()
+    const address: string = account?.address ?? ""
+
+    const loadBalance = useCallback(async () => {
+        if (!address) return
+        try { setBalance(await publicClient.readContract({ address: USDC, abi: erc20Abi, functionName: "balanceOf", args: [address as Address] }) as bigint) } catch {}
+    }, [address])
+    useEffect(() => { loadBalance() }, [loadBalance])
+
+    const refresh = useCallback(async () => {
+        if (!username) return
+        const r = await coord(`state?username=${encodeURIComponent(username)}`)
+        if (r.ok) setState(r.data)
+    }, [username])
+    useEffect(() => { refresh(); const t = setInterval(refresh, 2000); return () => clearInterval(t) }, [refresh])
+
+    const payment = (state?.payments ?? []).find((p: any) => p.id === paymentId)
+
+    // 1) Simulation en langage clair + contrôle de l'adresse
+    const simulate = async () => {
+        setBusy("sim"); setMsg(null); setPreview(null); setPaymentId("")
+        try {
+            if (!isAddress(to)) throw new Error("L'adresse du destinataire n'est pas valide (elle commence par 0x et fait 42 caractères).")
+            let units: bigint
+            try { units = toUnits(amount) } catch { throw new Error("Le montant n'est pas valide.") }
+            if (units <= BigInt(0)) throw new Error("Le montant doit être supérieur à zéro.")
+            const bal = (await publicClient.readContract({ address: USDC, abi: erc20Abi, functionName: "balanceOf", args: [address as Address] })) as bigint
+            setBalance(bal)
+            // simulation : la transaction réussirait-elle ? (appel à blanc, rien n'est envoyé)
+            let simulationOk = true, simulationError: string | undefined
+            try { await publicClient.simulateContract({ account: address as Address, address: USDC, abi: erc20Abi, functionName: "transfer", args: [to as Address, units] }) }
+            catch (e) { simulationOk = false; simulationError = errText(e) }
+            // contrôle de l'adresse par Swissquote (MOCK) : avertit, ne bloque pas
+            let flagged = false, flagReason: string | undefined
+            try { const sc = await fetch(`${SWISSQUOTE_URL}/screen/${to}`).then((r) => r.json()); flagged = sc.flagged; flagReason = sc.reason } catch {}
+            setPreview({ to: to as Address, units, label: fromUnits(units), large: isLarge(units), balance: bal, simulationOk, simulationError, flagged, flagReason })
+        } catch (e) { setMsg({ kind: "err", text: errText(e) }) }
+        setBusy("")
+    }
+
+    // 2) Envoi : petit = Touch ID ; gros = d'abord confirmation de l'appareil de secours
+    const doSend = async (pv: Preview) => {
+        if (sending.current) return
+        sending.current = true
+        try {
+            setBusy("send")
+            const hash = await client.sendUserOperation({
+                callData: await account.encodeCalls([{ to: USDC, value: BigInt(0), data: encodeFunctionData({ abi: erc20Abi, functionName: "transfer", args: [pv.to, pv.units] }) }])
+            }) // Touch ID
+            const receipt = await client.waitForUserOperationReceipt({ hash })
+            if (paymentId) await coord(`payments/${paymentId}/done`, { txHash: receipt.receipt.transactionHash })
+            setMsg({ kind: "ok", text: `✅ ${pv.label} USDC envoyés à ${fmtAddr(pv.to)}. Frais payés par Swissquote (gasless). Transaction : ${fmtAddr(receipt.receipt.transactionHash)}` })
+            setPreview(null); setPaymentId(""); setAmount(""); loadBalance()
+        } catch (e) { setMsg({ kind: "err", text: "Envoi impossible : " + errText(e) }) }
+        setBusy(""); sending.current = false
+    }
+
+    const send = async () => {
+        if (!preview) return
+        setMsg(null)
+        if (!preview.large) return doSend(preview)
+        // gros montant : demande de confirmation au second appareil
+        setBusy("ask")
+        const r = await coord("payments", { username, to: preview.to, amountUnits: preview.units.toString(), amountLabel: preview.label })
+        if (!r.ok) { setMsg({ kind: "err", text: r.data.error }); setBusy(""); return }
+        setPaymentId(r.data.id)
+        setMsg({ kind: "info", text: "Gros montant : ouvre /guardian sur ton appareil de secours et confirme ce paiement." })
+        setBusy("")
+    }
+
+    // dès que l'appareil de secours a confirmé, on envoie (Touch ID)
+    useEffect(() => {
+        if (payment?.status === "approved" && preview && !sending.current && busy === "") doSend(preview)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [payment?.status])
+
+    if (!ready) return <Card title="Envoyer des USDC"><p className="text-sm text-gray-400">Connecte-toi d'abord (Register ou Login).</p></Card>
+
+    const waiting = payment?.status === "pending"
+    return (
+        <Card title={`Envoyer des USDC (petit ≤ ${SMALL_LIMIT_USDC} · gros > ${SMALL_LIMIT_USDC})`}>
+            <p className="text-sm">
+                Solde du wallet : <b>{balance === null ? "…" : fromUnits(balance)} USDC</b>{" "}
+                <button className="underline text-blue-400" onClick={loadBalance}>actualiser</button>
+            </p>
+            {balance === BigInt(0) && (
+                <Msg kind="info">
+                    Pas d'USDC de test. Va sur <b>faucet.circle.com</b>, choisis <b>Ethereum Sepolia</b> et <b>USDC</b>, colle l'adresse de ton wallet : <code>{address}</code>
+                </Msg>
+            )}
+            <Input placeholder="Adresse du destinataire (0x…)" value={to} onChange={(e) => setTo(e.target.value.trim())} />
+            <div className="flex gap-2">
+                <Input placeholder="Montant en USDC" value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" />
+                <Btn onClick={simulate} busy={busy === "sim"} disabled={!to || !amount} tone="gray">Vérifier</Btn>
+            </div>
+            <div className="text-xs text-gray-400">
+                Raccourci de test : <button className="underline" onClick={() => setTo("0x2222222222222222222222222222222222222222")}>adresse normale</button>{" · "}
+                <button className="underline" onClick={() => setTo("0x000000000000000000000000000000000000dEaD")}>adresse signalée <MockBadge>MOCK</MockBadge></button>
+            </div>
+
+            {preview && (
+                <Card title="Résumé avant signature">
+                    <ul className="text-sm space-y-1">
+                        <li>• Tu envoies <b>{preview.label} USDC</b> (jetons de test, aucune valeur réelle) à <code>{fmtAddr(preview.to)}</code>.</li>
+                        <li>• Solde après : <b>{fromUnits(preview.balance >= preview.units ? preview.balance - preview.units : BigInt(0))} USDC</b>.</li>
+                        <li>• Frais de réseau : <b>0</b> pour toi (payés par Swissquote, « gasless »).</li>
+                        <li>• Simulation de la transaction : {preview.simulationOk ? <b className="text-green-400">elle réussirait ✅</b> : <b className="text-red-400">elle échouerait ❌ — {preview.simulationError}</b>}</li>
+                        <li>• Contrôle de l'adresse (Swissquote, <MockBadge />) : {preview.flagged ? <b className="text-red-400">⚠️ {preview.flagReason}</b> : <b className="text-green-400">aucun signalement ✅</b>}</li>
+                        <li>• Niveau de contrôle : {preview.large ? <b className="text-amber-300">GROS montant → passkey + confirmation de l'appareil de secours</b> : <b>petit montant → passkey seul</b>}</li>
+                    </ul>
+                    {preview.flagged && <Msg kind="err">Swissquote te prévient mais ne bloque pas ton paiement : tes fonds restent sous ton seul contrôle. Es-tu certain de vouloir continuer ?</Msg>}
+                    {!waiting && (
+                        <Btn tone={preview.large ? "purple" : "green"} onClick={send} busy={busy === "send" || busy === "ask"} disabled={!preview.simulationOk || preview.balance < preview.units}>
+                            {preview.large ? "Demander la confirmation de l'appareil de secours" : "Envoyer (Touch ID)"}
+                        </Btn>
+                    )}
+                    {preview.balance < preview.units && <Msg kind="err">Solde insuffisant.</Msg>}
+                </Card>
+            )}
+
+            {waiting && (
+                <Card tone="warn" title="⏳ En attente de ton appareil de secours">
+                    <p className="text-sm">Ouvre <b>/guardian</b> (appareil de secours, nom « {username} ») et confirme le paiement de <b>{payment.amountLabel} USDC</b>. Expire dans {countdown(payment.expiresAt - now)}.</p>
+                </Card>
+            )}
+            {payment?.status === "refused" && <Msg kind="err">Ton appareil de secours a refusé ce paiement.</Msg>}
+            {msg && <Msg kind={msg.kind}>{msg.text}</Msg>}
+        </Card>
+    )
+}

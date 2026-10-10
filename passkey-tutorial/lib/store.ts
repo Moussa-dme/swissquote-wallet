@@ -24,15 +24,31 @@ export type Setup = {
     delaySeconds: number
     installedAt: number
 }
+export type Payment = {
+    id: string
+    username: string
+    to: string
+    amountUnits: string
+    amountLabel: string
+    createdAt: number
+    expiresAt: number
+    status: "pending" | "approved" | "refused" | "done"
+    approvalSignature?: string
+    txHash?: string
+}
 type DB = {
     registry: Record<string, Partial<Record<"backup" | "contact", string>>>
     setups: Record<string, Setup>
     requests: Record<string, RecoveryRequest>
+    payments: Record<string, Payment>
 }
 
 const FILE = path.join(process.cwd(), ".data", "coordinator.json")
 export function readDB(): DB {
-    try { return JSON.parse(fs.readFileSync(FILE, "utf8")) } catch { return { registry: {}, setups: {}, requests: {} } }
+    try {
+        const db = JSON.parse(fs.readFileSync(FILE, "utf8"))
+        return { registry: {}, setups: {}, requests: {}, payments: {}, ...db }
+    } catch { return { registry: {}, setups: {}, requests: {}, payments: {} } }
 }
 export function writeDB(db: DB) {
     fs.mkdirSync(path.dirname(FILE), { recursive: true })

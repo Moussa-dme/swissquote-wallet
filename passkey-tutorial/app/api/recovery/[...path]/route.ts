@@ -5,9 +5,10 @@
 // LIMITE ASSUMÉE : ce délai est appliqué hors chaîne. Deux gardiens qui auraient déjà collecté leurs
 // signatures pourraient contourner le coordinateur. En production : TimelockPolicy on-chain (ZeroDev).
 import { NextRequest, NextResponse } from "next/server"
-import { createPublicClient, http, Hex } from "viem"
 import { sepolia } from "viem/chains"
-import { readDB, writeDB, RecoveryRequest, Role } from "@/lib/store"
+import { createPublicClient, http, Hex, recoverMessageAddress } from "viem"
+import { readDB, writeDB, RecoveryRequest, Role, Payment } from "@/lib/store"
+import { paymentMessage } from "@/lib/policy"
 
 export const dynamic = "force-dynamic"
 const ROLES: Role[] = ["backup", "contact", "swissquote"]
@@ -30,7 +31,9 @@ export async function GET(req: NextRequest, { params }: { params: { path: string
         const requests = Object.values(db.requests).filter((r) => r.username === username).sort((x, y) => y.createdAt - x.createdAt)
         // on ne renvoie jamais les signatures ici : seulement qui a approuvé
         const safe = requests.map((r) => ({ ...r, approvals: undefined, approvedBy: Object.keys(r.approvals) }))
-        return NextResponse.json({ now: Date.now(), registry: db.registry[username] ?? {}, setup: db.setups[username] ?? null, requests: safe })
+        const payments = Object.values(db.payments).filter((x) => x.username === username).sort((x, y) => y.createdAt - x.createdAt)
+            .map((x) => ({ ...x, approvalSignature: undefined }))
+        return NextResponse.json({ now: Date.now(), registry: db.registry[username] ?? {}, setup: db.setups[username] ?? null, requests: safe, payments })
     }
 
     if (a === "requests" && id && b === "signatures") {
@@ -87,6 +90,40 @@ export async function POST(req: NextRequest, { params }: { params: { path: strin
         db.requests[r.id] = r
         writeDB(db)
         return NextResponse.json({ id: r.id, readyAt: r.readyAt })
+    }
+
+    // --- Gros paiements : confirmation par le SECOND APPAREIL du client (appareil de secours) ---
+    if (a === "payments") {
+        if (!id) {
+            const { to, amountUnits, amountLabel } = body
+            const username = norm(body.username)
+            const setup = db.setups[username]
+            if (!setup) return err(400, "Installe d'abord la récupération : l'appareil de secours est requis pour les gros paiements.")
+            if (!isAddr(to) || !/^[0-9]+$/.test(String(amountUnits)) || !amountLabel) return err(400, "paramètres invalides")
+            const now = Date.now()
+            const pay: Payment = { id: Math.random().toString(36).slice(2, 8), username, to, amountUnits: String(amountUnits), amountLabel: String(amountLabel), createdAt: now, expiresAt: now + 5 * 60 * 1000, status: "pending" }
+            db.payments[pay.id] = pay
+            writeDB(db)
+            return NextResponse.json({ id: pay.id })
+        }
+        const pay = db.payments[id]
+        if (!pay) return err(404, "paiement inconnu")
+        if (b === "approve") {
+            if (pay.status !== "pending") return err(403, "Paiement plus en attente.")
+            if (Date.now() > pay.expiresAt) return err(403, "Demande expirée.")
+            const setup = db.setups[pay.username]
+            const signature = body.signature
+            if (!setup || !isHex(signature)) return err(400, "paramètres invalides")
+            // la signature doit venir de l'appareil de secours enregistré, et porter sur CE paiement précis
+            const who = await recoverMessageAddress({ message: paymentMessage(pay.id, pay.to, pay.amountLabel), signature: signature as Hex }).catch(() => null)
+            if (!who || lc(who) !== lc(setup.guardians.backup)) return err(403, "Signature invalide : ce n'est pas l'appareil de secours de ce client.")
+            pay.status = "approved"; pay.approvalSignature = signature
+            writeDB(db)
+            return NextResponse.json({ ok: true })
+        }
+        if (b === "refuse") { if (pay.status === "pending") { pay.status = "refused"; writeDB(db) } return NextResponse.json({ ok: true }) }
+        if (b === "done") { pay.status = "done"; pay.txHash = body.txHash; writeDB(db); return NextResponse.json({ ok: true }) }
+        return err(404, "route inconnue")
     }
 
     const r = id ? db.requests[id] : undefined

@@ -76,9 +76,23 @@ async function guardianFor(guardians) {
     return { account, client }
 }
 
+// MOCK : liste d'adresses « signalées » (fraude / sanctions). En production : un fournisseur de conformité
+// (screening de sanctions, listes d'arnaques) ; ici, deux adresses inventées pour la démo.
+const FLAGGED = {
+    "0x000000000000000000000000000000000000dead": "Adresse signalée comme frauduleuse (liste MOCK)",
+    "0x1111111111111111111111111111111111111111": "Adresse apparaissant sur une liste de sanctions (liste MOCK)"
+}
+
 const routes = {
     // Adresse du gardien Swissquote (clé publique, sans secret)
     "GET /guardian": async () => [200, { address: swissquote.address, mock: true }],
+
+    // Contrôle d'une adresse destinataire. Swissquote AVERTIT le client mais ne bloque jamais son paiement
+    // (en self-custody la banque n'a aucun pouvoir sur les fonds ; décision défendue dans le pitch).
+    "GET /screen/:address": async (_b, p) => {
+        const reason = FLAGGED[String(p.address).toLowerCase()]
+        return [200, { address: p.address, flagged: Boolean(reason), reason: reason ?? null, mock: true }]
+    },
 
     // Le client démarre une demande de récupération (dossier KYC simulé)
     "POST /cases": async (b) => {
