@@ -1,0 +1,19 @@
+# Secrets : ne jamais commiter
+.env
+.env.*
+!.env.example
+
+# Dépendances et builds
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# macOS / éditeurs
+.DS_Store
+.idea/
+.vscode/
+
+# Scaffold-ETH 2 (bac à sable local, a son propre .git) : exclu pour l'instant
+bsa-hack/
