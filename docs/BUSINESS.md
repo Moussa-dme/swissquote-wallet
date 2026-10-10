@@ -1,46 +1,56 @@
 # Business case
 
-> **Squelette à compléter par le binôme.** Il rassemble les **faits donnés par les mentors Swissquote** et ce qu'on a construit, et laisse des cases pour les chiffres. **Je n'ai inventé aucun chiffre** : tout ce qui est entre crochets est à sourcer ou à estimer par l'équipe. Le brief demande « un paragraphe, mais concret » ; le mentor a dit que le critère clé est le **ratio bénéfice / risque** (« une banque gère du risque »).
+> Le brief demande « un paragraphe, mais concret » ; le mentor a dit que le critère clé est le **ratio bénéfice / risque**. Les **chiffres de marché** viennent de sources citées. Les **chiffres du modèle** sont des **hypothèses de travail**, clairement étiquetées, avec la formule pour que l'équipe les ajuste.
 
-## 1. La proposition en une phrase
-Un wallet self-custody **complémentaire** à l'offre existante : les clients gardent leurs clés, mais **restent dans l'écosystème Swissquote** (compte lié, récupération assistée, conformité), au lieu de retirer leurs cryptos vers un wallet externe et de partir.
+## Le paragraphe à rendre (version concrète)
 
-## 2. Pour qui
-- Les mentors estiment que **80 à 90 % des clients** n'ont jamais entendu parler d'un wallet : ils resteront sur la plateforme classique. L'offre vise les clients **déjà à l'aise avec la crypto** qui veulent le self-custody.
-- Le mentor a insisté : **ne pas remplacer les banques**, mais proposer une option supplémentaire (« on ne va pas se remplacer nous-mêmes »). Un client peut **commencer avec 10 CHF** et augmenter progressivement.
-- **[À COMPLÉTER : benchmark]** Le mentor a suggéré de chiffrer le marché : nombre de personnes de **20 à 30 ans en Suisse actives dans les cryptomonnaies**. Source à trouver : [...]. Estimation de la part intéressée par un wallet self-custody : [...].
+**Swissquote aujourd'hui perd les clients qui veulent le self-custody** : ils retirent leurs cryptos vers un wallet externe et quittent l'écosystème. Notre wallet leur permet de **garder leurs clés tout en restant clients** : compte lié, récupération assistée, conformité automatique. Le marché existe : selon une enquête Bitpanda / YouGov de 2024, **23 % de la population suisse** possède des cryptos (32 % des 28 à 43 ans, 29 % des 18 à 27 ans), et une étude récente indique qu'environ **18 % des Suisses** en détiennent. Les mentors estiment néanmoins que **80 à 90 % des clients de la banque** ne connaissent pas les wallets : l'offre vise donc une **minorité déjà à l'aise**, comme **option complémentaire** (la banque ne se remplace pas elle-même). Les revenus viennent de **trois sources** : la **rétention** (les actifs et les commissions de trading restent chez Swissquote), un **service de récupération payant** et un **abonnement « gas station »** ; un pourcentage des actifs sous garde (0,01 %, ordre de grandeur donné par le mentor) ne suffit **pas** à lui seul. Les coûts sont maîtrisés : **aucune assurance** (la récupération est une obligation de moyens), gas plafonné par client, et un développement **léger** car le prototype n'utilise **aucune cryptographie ni aucun contrat maison**. Le **risque est faible** : la banque n'a **aucune clé**, **ne peut rien déplacer seule**, et la récupération exige 2 gardiens sur 3 après vérification en personne.
 
-## 3. Ce que Swissquote gagne
-| Source | Mécanisme | Chiffrage |
+## Marché (chiffres sourcés)
+| Donnée | Valeur | Source |
 |---|---|---|
-| **Rétention** | Les clients qui voulaient sortir leurs actifs restent dans l'écosystème. Pas de départ vers un wallet externe. | [nb de clients retenus × actifs moyens × marge] |
-| **Frais sur les actifs sous garde (AUC)** | Idée du mentor : un petit pourcentage des actifs dans le wallet pour certains services (exemple donné : **0,01 %**). | [AUC estimé × 0,01 %] |
-| **Service de récupération payant** | Le mentor a cité le backup comme fonctionnalité pour laquelle les clients paieraient. | [prix par an × nb d'abonnés] |
-| **Abonnement « gas station »** (bonus) | Idée du mentor : un abonnement premium (exemple : **200 CHF par mois** pour **100 transactions** sponsorisées). | [nb d'abonnés × prix − coût du gas] |
-| **Nouveaux clients** | Des personnes attirées par un wallet self-custody **adossé à une banque suisse**. | [...] |
-| **Trading** | Les clients qui restent continuent d'acheter et de vendre via la plateforme. | [...] |
+| Part de la population suisse qui possède des cryptos | **23 %** (2024) | Bitpanda / YouGov, via [Crowdfund Insider](https://www.crowdfundinsider.com/2024/08/228747-switzerland-ranked-among-most-crypto-friendly-nations-with-23-of-population-owning-virtual-currencies-bitpanda-survey/) |
+| Par génération (Suisse) | Millennials (28 à 43 ans) **32 %**, Gen Z (18 à 27 ans) **29 %** | même enquête (tranches d'âge différentes de « 20 à 30 ans » : approximation) |
+| Détenteurs récents | environ **18 %** des répondants de plus de 18 ans, contre 11 % en 2024 | [swissinfo](https://www.swissinfo.ch/eng/various/almost-a-fifth-of-all-swiss-people-hold-crypto-assets/91667885) (étude de la HSLU) **[À VÉRIFIER]** |
+| Intérêt par génération | Gen Z et Gen Y les plus intéressées | [PostFinance](https://www.postfinance.ch/content/dam/pfch/doc/a_d/crypto_investments_switzerland_en.pdf) |
 
-## 4. Ce que ça coûte
-| Poste | Détail | Chiffrage |
+> **Pas de donnée trouvée** pour la tranche exacte « 20 à 30 ans » demandée par le mentor : on cite les tranches disponibles et on le dit.
+
+## Sources de revenus
+| Source | Mécanisme | Donnée du mentor |
 |---|---|---|
-| **Gas sponsorisé** | Chaque transaction sponsorisée coûte des frais réseau. Maîtrisé par des plafonds par client et des contrats autorisés (politique de frais, bonus gasless). | [coût moyen par transaction × transactions par client] |
-| **Support de la récupération** | Contrôle d'identité en agence, suivi des demandes. Atténué par la récupération **sans** Swissquote (appareil de secours + contact). | [coût par récupération × taux de récupération] |
-| **Conformité** | Vérification de propriété et contrôle d'adresses (fournisseur de listes de sanctions). | [...] |
-| **Infrastructure** | Serveur de gardien, coordinateur, fournisseur de comptes intelligents. | [...] |
-| **Assurance** | **Aucune** dans ce projet (précisé par le mentor) : la récupération est une **obligation de moyens**, pas de résultat. | 0 |
+| **Rétention** | Les clients qui voulaient sortir leurs actifs restent : actifs et commissions de trading conservés. | Offre complémentaire, pas un remplacement. |
+| **Frais sur les actifs sous garde** | Pourcentage des actifs dans le wallet pour certains services. | Exemple : **0,01 %**. |
+| **Service de récupération payant** | Abonnement annuel pour l'assistance. | Cité par le mentor comme un service pour lequel les clients paieraient. |
+| **Abonnement « gas station »** | Frais de transaction avancés par la banque, abonnement premium. | Exemple : **200 CHF par mois** pour **100 transactions**. |
+| **Nouveaux clients** | Attirés par un wallet self-custody adossé à une banque suisse. | — |
 
-## 5. Risques (ratio bénéfice / risque)
-- **Risque de perte de fonds par un client** : le client assume la responsabilité de ses clés ; la banque n'est pas dépositaire. Récupération en « best effort ».
-- **Risque réglementaire** : voir `LEGAL.md` (qualification de garde, Travel Rule).
-- **Risque d'usage frauduleux du gas sponsorisé** : plafonds et liste de contrats.
-- **Dépendance à un fournisseur** (ZeroDev) : voir `MENACE.md`.
-- **Conclusion à formuler** : le risque est jugé **faible** parce que (1) la banque ne détient ni clé ni pouvoir seule de déplacer les fonds, (2) la récupération est à 2 voix sur 3 avec vérification en personne, (3) pas d'engagement d'assurance. **[À CHIFFRER]** le bénéfice attendu face à ce risque.
+## Modèle chiffré (hypothèses de travail, à ajuster)
+*Pour **1 000 clients** qui adoptent le wallet. Toutes les valeurs d'entrée sont des hypothèses non sourcées, sauf le taux de 0,01 % (mentor).*
 
-## 6. Facilité d'implémentation (critère de différenciation cité par le mentor)
-Le mentor a dit que si une solution demande « 600 jours de développement », c'est un problème, et qu'une solution aussi sûre mais plus simple peut être préférable. Notre atout :
-- **Aucune cryptographie ni aucun contrat maison** : on assemble des briques existantes (compte intelligent Kernel, passkeys, multisig pondéré, paymaster).
-- **Prototype complet construit en une nuit de hackathon** : création, signature, récupération, contrôles, liaison de compte.
-- **Reste à industrialiser** (liste honnête) : délai de récupération sur la blockchain, vrai KYC et vraie agence, clé physique pour l'appareil de secours, politique de frais, audit de sécurité. **[À ESTIMER : jours de développement.]**
+| Ligne | Formule | Hypothèse | Résultat annuel |
+|---|---|---|---|
+| Actifs moyens dans le wallet | — | **5 000 CHF** par client (hypothèse ; « commencer avec 10 CHF », dit le mentor) | 5 000 000 CHF |
+| Revenu : % des actifs | actifs × 0,01 % | 0,01 % (mentor) | **500 CHF** |
+| Revenu : récupération payante | clients × prix | **50 CHF** par an (hypothèse) | **50 000 CHF** |
+| Coût : gas sponsorisé | clients × transactions × coût | **20** transactions par an × **0,05 CHF** (hypothèse) | **1 000 CHF** |
+| Coût : support de récupération | clients × taux × coût | **2 %** × **200 CHF** (hypothèse) | **4 000 CHF** |
+| Coût : assurance | — | **aucune** (mentor) | 0 |
+| **Marge directe** | revenus − coûts | | **≈ 45 500 CHF** |
 
-## 7. Positionnement pour le pitch (idée)
-« Leurs clés, leur contrôle, à un pas de leur compte Swissquote. » Mode **basique** (envoyer à un ami, un clic) et mode **avancé** (comme le mentor l'a recommandé), pour les 80 % de clients qui ne connaissent pas la crypto.
+**Ce que le modèle montre** : le **pourcentage des actifs** (500 CHF) est **négligeable** ; la valeur vient du **service payant** et surtout de la **rétention** (les actifs et le trading qui **ne partent pas**), qu'il faut valoriser avec les données de la banque : *rétention = clients retenus × actifs × marge de la banque sur ces actifs*. **[À CHIFFRER avec des données internes ou une hypothèse assumée.]**
+
+## Risques (ratio bénéfice / risque)
+| Risque | Atténuation |
+|---|---|
+| Perte de fonds par un client | Le client assume ses clés ; récupération en « best effort ». |
+| Qualification réglementaire | Voir `LEGAL.md` (aucune clé, aucune disposition seule, aucun blocage). |
+| Abus du gas sponsorisé | Plafonds par client, liste de contrats, abonnement. |
+| Dépendance à un fournisseur | Voir `MENACE.md` 3.8. |
+| **Conclusion** | **Risque faible** : la banque n'a aucune clé et ne peut rien déplacer seule, la récupération est à 2 voix sur 3 avec vérification en personne, aucune assurance engagée. |
+
+## Facilité d'implémentation (différenciateur cité par le mentor)
+Le mentor a dit qu'une solution demandant « 600 jours de développement » est un problème. Notre atout : **aucune cryptographie ni aucun contrat maison**, des **briques existantes** (compte intelligent, passkeys, multisig, paymaster), et un **prototype complet construit en une nuit**. **Reste à industrialiser** : délai de récupération sur la blockchain, vrai KYC et vraie agence, clé physique pour l'appareil de secours, politique de frais, audit de sécurité. **[À ESTIMER en jours de développement.]**
+
+## Positionnement (pour le pitch)
+*« Leurs clés, leur contrôle, à un pas de leur compte Swissquote. »* Mode **basique** (envoyer à un ami, un clic) et mode **avancé**, pour les 80 % de clients qui ne connaissent pas la crypto.
