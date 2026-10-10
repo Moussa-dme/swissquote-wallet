@@ -42,6 +42,7 @@ Notation : implémentation technique 35, sécurité & design de garde 20, faisab
 - 9h–9h30 : soumettre (deadline 10h00). Jugement 10h30–13h.
 
 ## Règles de travail
+- **Référence absolue : `swissquote-track.md` (consignes officielles du track). Ne jamais dévier de ces consignes ; si une idée ou une réponse de mentor semble s'en écarter, le signaler à l'utilisateur avant d'agir. Relire ce fichier au début de chaque session et avant chaque grande décision.**
 - Parler français, expliquer simplement (utilisateur débutant). Demander avant toute commande qui installe, supprime ou modifie quelque chose hors du projet.
 - Priorité absolue : create → sign → recover de bout en bout avant tout bonus.
 - Faire un commit Git après chaque étape qui marche, avec un message clair.
@@ -56,6 +57,7 @@ Notation : implémentation technique 35, sécurité & design de garde 20, faisab
 - `passkey-tutorial/` : template ZeroDev (à cloner, voir journal).
 
 ## Exigences du brief officiel (PDF) à ne pas oublier
+(Texte intégral dans `swissquote-track.md` ; ce qui suit n'est qu'un rappel.)
 - Histoire de bout en bout : créer → se connecter et signer → perdre le wallet/les clés → récupérer.
 - 6 sujets obligatoires : (1) modèle de garde + threat model (qui peut voler, qui peut verrouiller le client, Swissquote seule ou avec un partenaire peut-elle bouger les fonds ?), (2) diagramme d'architecture avec parties MOCK marquées, (3) création du wallet (où sont générées/stockées les clés, lien avec l'identité Swissquote), (4) authentification (montant élevé vs petit), (5) récupération, (6) business case.
 - **Récupération : montrer aussi comment le client récupère ses fonds si les services Swissquote disparaissent définitivement.** Bonus si la démo refuse un attaquant qui a volé téléphone ET e-mail.
