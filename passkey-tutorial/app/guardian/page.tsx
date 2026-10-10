@@ -9,7 +9,7 @@ import { paymentMessage } from "@/lib/policy"
 import {
     Guardians, ROLE_LABEL, addressOf, approveRecovery, coord, errText, finalizeRecovery, fmtAddr, newGuardianKey
 } from "@/lib/recovery"
-import { Btn, Card, Input, MockBadge, Msg, countdown, useNow } from "../components/ui"
+import { Btn, Card, Input, MockBadge, Msg, RoleHeader, countdown, useNow } from "../components/ui"
 
 type GRole = "backup" | "contact"
 const keyName = (role: GRole) => `sq-guardian-key-${role}`
@@ -108,7 +108,7 @@ export default function GuardianPage() {
     return (
         <main className="min-h-screen px-4 py-12">
             <div className="max-w-lg mx-auto space-y-4">
-                <h1 className="text-3xl font-semibold text-center">Gardien du wallet</h1>
+                <RoleHeader emoji="🛡️" title="Gardien du wallet" subtitle="Appareil de secours ou contact de confiance : tu aides le propriétaire à retrouver son wallet, ou tu confirmes l'un de ses gros paiements." />
 
                 <Card title="Qui es-tu ?">
                     <div className="flex gap-2">

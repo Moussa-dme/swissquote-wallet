@@ -16,6 +16,8 @@ import React, { useEffect, useState } from "react"
 import { createPublicClient, http, parseAbi, encodeFunctionData } from "viem"
 import { sepolia } from "viem/chains"
 import OwnerRecoveryPanel from "./components/OwnerRecoveryPanel"
+import { Btn, Card, Input, Msg, Pill } from "./components/ui"
+import { coord, fmtAddr } from "@/lib/recovery"
 import PaymentPanel from "./components/PaymentPanel"
 import SwissquoteLinkPanel from "./components/SwissquoteLinkPanel"
 
@@ -62,6 +64,9 @@ export default function Home() {
     const [isSendingUserOp, setIsSendingUserOp] = useState(false)
     const [userOpHash, setUserOpHash] = useState("")
     const [userOpStatus, setUserOpStatus] = useState("")
+    const [advanced, setAdvanced] = useState(false)
+    const [protection, setProtection] = useState<any>(null)
+    const [copied, setCopied] = useState(false)
 
     const createAccountAndClient = async (passkeyValidator: any) => {
         kernelAccount = await createKernelAccount(publicClient, {
@@ -119,7 +124,6 @@ export default function Home() {
             await createAccountAndClient(passkeyValidator)
 
             setIsRegistering(false)
-            window.alert("Register done.  Try sending UserOps.")
         } catch (e: any) {
             console.error("Register failed:", e)
             window.alert("Register failed: " + describeError(e))
@@ -148,7 +152,6 @@ export default function Home() {
             await createAccountAndClient(passkeyValidator)
 
             setIsLoggingIn(false)
-            window.alert("Login done.  Try sending UserOps.")
         } catch (e: any) {
             console.error("Login failed:", e)
             window.alert("Login failed: " + describeError(e))
@@ -199,132 +202,124 @@ export default function Home() {
         setMounted(true)
     }, [])
 
+    // Statut de protection (récupération installée ?) pour le mode basique
+    useEffect(() => {
+        if (!isKernelClientReady || !username) return
+        const load = async () => {
+            const r = await coord(`state?username=${encodeURIComponent(username)}`)
+            if (r.ok) setProtection(r.data)
+        }
+        load()
+        const t = setInterval(load, 4000)
+        return () => clearInterval(t)
+    }, [isKernelClientReady, username])
+
+    const copyAddress = async () => {
+        try { await navigator.clipboard.writeText(accountAddress); setCopied(true); setTimeout(() => setCopied(false), 1500) } catch {}
+    }
+
     if (!mounted) return <></>
 
-    // Spinner component for visual feedback during loading states
-    const Spinner = () => (
-        <svg
-            className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-        >
-            <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-            ></circle>
-            <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            ></path>
-        </svg>
-    )
+    const connected = isKernelClientReady
+    const protectedWallet = Boolean(protection?.setup)
+    const busyAuth = isRegistering || isLoggingIn
 
     return (
-        <main className="flex items-center justify-center min-h-screen px-4 py-24">
-            <div className="w-full max-w-lg mx-auto">
-                <h1 className="text-4xl font-semibold text-center mb-12">
-                    ZeroDev Passkeys Demo
-                </h1>
+        <main className="min-h-screen px-4 py-8 sm:py-12">
+            <div className="w-full max-w-lg mx-auto space-y-4">
+                {/* En-tête */}
+                <header className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-2xl font-semibold tracking-tight">Swissquote Wallet</h1>
+                        <p className="text-xs text-slate-400">Leurs clés, leur contrôle, à un pas de leur compte Swissquote.</p>
+                    </div>
+                    <Pill tone="amber">Réseau de test</Pill>
+                </header>
 
-                <div className="space-y-4">
-                    {/* Account Address Label */}
-                    {accountAddress && (
-                        <div className="text-center mb-4">
-                            Account address:{" "}
-                            <a
-                                href={`https://jiffyscan.xyz/account/${accountAddress}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-500 hover:text-blue-700"
-                            >
-                                {" "}
-                                {accountAddress}{" "}
-                            </a>
+                {!connected ? (
+                    /* ---------- Accueil : créer ou retrouver son wallet ---------- */
+                    <Card>
+                        <h2 className="text-xl font-semibold">Votre wallet. Vos clés.</h2>
+                        <p className="text-sm text-slate-300">
+                            Pas de phrase secrète à noter : <b>Touch ID</b> ou <b>Face ID</b> protège votre wallet. La clé reste dans la puce de votre appareil,
+                            personne d'autre ne peut déplacer vos fonds, pas même Swissquote.
+                        </p>
+                        <Input placeholder="Votre nom d'utilisateur" value={username} onChange={(e) => setUsername(e.target.value)} />
+                        <div className="flex flex-col sm:flex-row gap-2">
+                            <Btn onClick={handleRegister} busy={isRegistering} disabled={!username || busyAuth}>Créer mon wallet</Btn>
+                            <Btn tone="purple" onClick={handleLogin} busy={isLoggingIn} disabled={!username || busyAuth}>Me connecter</Btn>
                         </div>
-                    )}
+                        <p className="text-xs text-slate-400">Première fois : « Créer mon wallet ». Déjà un wallet : « Me connecter ».</p>
+                        <div className="text-xs text-slate-400 pt-2 border-t border-white/10 space-x-4">
+                            <a className="text-sky-300 hover:text-sky-200" href="/recover">J'ai perdu mon appareil</a>
+                            <a className="text-sky-300 hover:text-sky-200" href="/guardian">Je suis un gardien</a>
+                        </div>
+                    </Card>
+                ) : (
+                    <>
+                        {/* ---------- Mon wallet ---------- */}
+                        <Card tone="ok">
+                            <div className="flex items-start justify-between gap-2">
+                                <div>
+                                    <p className="text-sm text-slate-300">Bonjour</p>
+                                    <p className="text-xl font-semibold">{username}</p>
+                                </div>
+                                <Pill tone="green">🔒 Protégé par Touch ID</Pill>
+                            </div>
+                            <div className="flex items-center justify-between gap-2 text-sm">
+                                <span className="text-slate-300">Adresse : <code>{fmtAddr(accountAddress)}</code></span>
+                                <span className="space-x-3">
+                                    <button className="text-sky-300 hover:text-sky-200" onClick={copyAddress}>{copied ? "copié ✓" : "copier"}</button>
+                                    <a className="text-sky-300 hover:text-sky-200" target="_blank" rel="noopener noreferrer" href={`https://sepolia.etherscan.io/address/${accountAddress}`}>voir sur la blockchain</a>
+                                </span>
+                            </div>
+                        </Card>
 
-                    {/* Input Box */}
-                    <input
-                        type="text"
-                        placeholder="Your username"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        className="p-2 border border-gray-300 rounded-lg w-full"
-                    />
-
-                    {/* Register and Login Buttons */}
-                    <div className="flex flex-col sm:flex-row sm:space-x-4">
-                        {/* Register Button */}
-                        <button
-                            onClick={handleRegister}
-                            disabled={isRegistering || isLoggingIn}
-                            className="flex justify-center items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 w-full"
-                        >
-                            {isRegistering ? <Spinner /> : "Register"}
-                        </button>
-
-                        {/* Login Button */}
-                        <button
-                            onClick={handleLogin}
-                            disabled={isLoggingIn || isRegistering}
-                            className="mt-2 sm:mt-0 flex justify-center items-center px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 w-full"
-                        >
-                            {isLoggingIn ? <Spinner /> : "Login"}
-                        </button>
-                    </div>
-
-                    {/* Send UserOp Button */}
-                    <div className="flex flex-col items-center w-full">
-                        <button
-                            onClick={handleSendUserOp}
-                            disabled={!isKernelClientReady || isSendingUserOp}
-                            className={`px-4 py-2 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-opacity-50 flex justify-center items-center w-full ${
-                                isKernelClientReady && !isSendingUserOp
-                                    ? "bg-green-500 hover:bg-green-700 focus:ring-green-500"
-                                    : "bg-gray-500"
-                            }`}
-                        >
-                            {isSendingUserOp ? <Spinner /> : "Send UserOp"}
-                        </button>
-                        {/* UserOp Status Label */}
-                        {userOpHash && (
-                            <div
-                                className="mt-4"
-                                dangerouslySetInnerHTML={{
-                                    __html: userOpStatus
-                                }}
-                            />
+                        {/* ---------- Protection ---------- */}
+                        {protectedWallet ? (
+                            <Card>
+                                <div className="flex items-center justify-between gap-2">
+                                    <div>
+                                        <p className="font-medium">Récupération activée ✅</p>
+                                        <p className="text-sm text-slate-300">Si vous perdez cet appareil, 2 gardiens sur 3 vous aident à retrouver votre wallet.</p>
+                                    </div>
+                                </div>
+                            </Card>
+                        ) : (
+                            <Card tone="warn">
+                                <p className="font-medium">⚠️ Wallet pas encore protégé</p>
+                                <p className="text-sm text-slate-200">Sans récupération, perdre cet appareil signifie perdre l'accès. Elle est aussi nécessaire pour les gros paiements.</p>
+                                <Btn tone="purple" onClick={() => setAdvanced(true)}>Activer la protection</Btn>
+                            </Card>
                         )}
-                    </div>
 
-                    {/* Liaison au compte Swissquote + preuve de propriété (Travel Rule) */}
-                    <SwissquoteLinkPanel ready={isKernelClientReady} account={kernelAccount} />
+                        {/* ---------- Envoyer (mode basique) ---------- */}
+                        <PaymentPanel username={username} ready={isKernelClientReady} account={kernelAccount} client={kernelClient} />
 
-                    {/* Paiement USDC avec contrôle petit / gros montant */}
-                    <PaymentPanel username={username} ready={isKernelClientReady} account={kernelAccount} client={kernelClient} />
-
-                    {/* Récupération 2-sur-3 (propriétaire) */}
-                    <OwnerRecoveryPanel
-                        username={username}
-                        accountAddress={accountAddress}
-                        ready={isKernelClientReady}
-                        kernelClient={kernelClient}
-                        kernelAccount={kernelAccount}
-                    />
-
-                    {/* Autres rôles de la démo (à ouvrir dans un autre navigateur) */}
-                    <div className="text-sm text-gray-400 text-center space-x-4">
-                        <a className="text-blue-500 hover:text-blue-700" href="/guardian" target="_blank">Gardien (secours / contact)</a>
-                        <a className="text-blue-500 hover:text-blue-700" href="/recover" target="_blank">Nouvel appareil</a>
-                        <a className="text-blue-500 hover:text-blue-700" href="/desk" target="_blank">Guichet Swissquote (MOCK)</a>
-                    </div>
-                </div>
+                        {/* ---------- Mode avancé ---------- */}
+                        <button className="w-full text-sm text-sky-300 hover:text-sky-200 py-2" onClick={() => setAdvanced(!advanced)}>
+                            {advanced ? "▲ Masquer le mode avancé" : "▼ Mode avancé : récupération, compte Swissquote"}
+                        </button>
+                        {advanced && (
+                            <div className="space-y-4">
+                                <OwnerRecoveryPanel username={username} accountAddress={accountAddress} ready={isKernelClientReady} kernelClient={kernelClient} kernelAccount={kernelAccount} />
+                                <SwissquoteLinkPanel ready={isKernelClientReady} account={kernelAccount} />
+                                <Card title="Transaction de test">
+                                    <p className="text-sm text-slate-300">Envoie une vraie transaction sans frais (création d'un jeton de test).</p>
+                                    <Btn tone="green" onClick={handleSendUserOp} busy={isSendingUserOp}>Envoyer une transaction de test</Btn>
+                                    {userOpHash && <div className="text-sm" dangerouslySetInnerHTML={{ __html: userOpStatus }} />}
+                                </Card>
+                                <Card title="Autres écrans de la démo">
+                                    <ul className="text-sm space-y-1 text-slate-300">
+                                        <li><a className="text-sky-300 hover:text-sky-200" href="/guardian" target="_blank">Gardien</a> : appareil de secours ou contact de confiance</li>
+                                        <li><a className="text-sky-300 hover:text-sky-200" href="/recover" target="_blank">Nouvel appareil</a> : récupérer après une perte</li>
+                                        <li><a className="text-sky-300 hover:text-sky-200" href="/desk" target="_blank">Guichet Swissquote</a> (simulé)</li>
+                                    </ul>
+                                </Card>
+                            </div>
+                        )}
+                    </>
+                )}
             </div>
         </main>
     )

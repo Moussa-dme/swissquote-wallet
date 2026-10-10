@@ -116,15 +116,17 @@ Tu dois lire : `MOCK Swissquote sur http://localhost:4000 — gardien : 0x…`. 
 
 ## 5. Le scénario de test, pas à pas
 
+> **L'écran d'accueil a deux niveaux** : un **mode basique** (créer ou retrouver son wallet, voir s'il est protégé, envoyer des USDC) et un **mode avancé** (bouton « ▼ Mode avancé » : récupération, compte Swissquote, transaction de test). Les étapes ci-dessous indiquent où cliquer.
+
 **Choisis un nom** (par exemple `Alice`) et **utilise exactement le même nom partout** dans ce scénario (les majuscules sont ignorées, mais pas les fautes de frappe). À chaque nouveau test, prends un **nouveau nom** (`Alice2`, `Alice3`…) pour partir de zéro.
 
 ### Étape 1 : créer le wallet (Navigateur A)
 
 1. Ouvre `http://localhost:3000`.
-2. Dans le champ « Your username », écris `Alice`, puis clique sur **Register**.
+2. Dans le champ « Votre nom d'utilisateur », écris `Alice`, puis clique sur **Créer mon wallet**.
 3. Ton ordinateur demande **Touch ID** (ou Windows Hello / le code) : valide.
-4. Une alerte « Register done » apparaît, et l'**adresse du wallet** s'affiche en haut (`0x…`).
-5. *Facultatif :* clique sur **Send UserOp** : une vraie transaction part sur la blockchain **sans que tu paies de frais**. Après quelques secondes, tu vois « UserOp completed ».
+4. L'écran passe en mode « connecté » : tu vois « Bonjour Alice », l'**adresse du wallet** (`0x…`) et l'étiquette **« 🔒 Protégé par Touch ID »**. Un encadré rouge « Wallet pas encore protégé » te propose d'activer la récupération (étape 4).
+5. *Facultatif :* ouvre **« ▼ Mode avancé »** en bas de page et clique sur **Envoyer une transaction de test** : une vraie transaction part sur la blockchain **sans que tu paies de frais**. Après quelques secondes, tu vois « UserOp completed ».
 
 ### Étape 2 : désigner l'appareil de secours (Navigateur B)
 
@@ -143,8 +145,8 @@ Tu dois lire : `MOCK Swissquote sur http://localhost:4000 — gardien : 0x…`. 
 
 ### Étape 4 : installer la récupération (Navigateur A)
 
-1. Reviens sur `http://localhost:3000`. Si besoin, clique sur **Login** (Touch ID) pour te reconnecter.
-2. Dans le panneau **« Récupération du wallet (2 gardiens sur 3) »**, tu dois voir deux ✅ (appareil de secours, contact) et un troisième (Swissquote, MOCK).
+1. Reviens sur `http://localhost:3000`. Si besoin, saisis ton nom et clique sur **Me connecter** (Touch ID).
+2. Clique sur **Activer la protection** (ou ouvre **« ▼ Mode avancé »**) : le panneau **« Récupération du wallet (2 gardiens sur 3) »** s'affiche. Tu dois y voir deux ✅ (appareil de secours, contact) et un troisième (Swissquote, MOCK).
 3. Mets le **délai de sécurité à 60** secondes (en production, ce serait 48 heures).
 4. Clique sur **Installer la récupération (Touch ID)**. Patiente 10 à 20 secondes.
 5. Message vert : « Récupération installée sur la blockchain ».
@@ -190,7 +192,7 @@ Tu peux tester **deux variantes**. Fais-les sur des noms différents.
 
 ### Étape 9 : vérifier que l'ancien appareil est bloqué (Navigateur A)
 
-Retourne sur `http://localhost:3000` et clique sur **Send UserOp** : tu dois obtenir une erreur **« Signature provided for the User Operation is invalid »**. C'est **la bonne nouvelle** : l'ancien appareil n'a plus aucun pouvoir.
+Retourne sur `http://localhost:3000` (navigateur A), ouvre **« ▼ Mode avancé »** et clique sur **Envoyer une transaction de test** : tu dois obtenir une erreur **« Signature provided for the User Operation is invalid »**. C'est **la bonne nouvelle** : l'ancien appareil n'a plus aucun pouvoir.
 
 ---
 
@@ -226,7 +228,7 @@ Après une récupération, le **même** panneau apparaît sur `/recover` une foi
 
 *Montre comment le wallet est relié à l'identité du client, et la règle « Travel Rule » : la banque n'envoie vers un wallet externe qu'après avoir vérifié qui le possède.*
 
-Sur la page d'accueil (navigateur A, wallet connecté), carte **« Compte Swissquote et preuve de propriété »** (étiquette MOCK) :
+Sur la page d'accueil (navigateur A, wallet connecté), dans **« ▼ Mode avancé »**, carte **« Compte Swissquote et preuve de propriété »** (étiquette MOCK) :
 1. Connecte-toi avec le compte de démonstration : **CH-1001** / **demo1234**, puis **Se connecter à Swissquote**.
 2. Clique sur **Vers mon wallet** *avant* toute preuve : retrait **refusé** (« Wallet externe non vérifié… Travel Rule »).
 3. Clique sur **Prouver que ce wallet m'appartient (Touch ID)** : ton wallet signe un message ; Swissquote vérifie la signature **sur la blockchain**, sans voir aucune clé. Le wallet apparaît comme « 🔗 lié ».

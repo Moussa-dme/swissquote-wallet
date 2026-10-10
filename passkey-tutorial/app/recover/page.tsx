@@ -8,7 +8,7 @@ import { encodeFunctionData, parseAbi } from "viem"
 import {
     SWISSQUOTE_URL, ROLE_LABEL, api, buildRecoveryCallData, coord, errText, fmtAddr, passkeyValidatorFor, passkeyValidatorFromSerialized, recoveredWallet
 } from "@/lib/recovery"
-import { Btn, Card, Input, MockBadge, Msg, countdown, useNow } from "../components/ui"
+import { Btn, Card, Input, MockBadge, Msg, RoleHeader, countdown, useNow } from "../components/ui"
 import PaymentPanel from "../components/PaymentPanel"
 import SwissquoteLinkPanel from "../components/SwissquoteLinkPanel"
 
@@ -128,7 +128,7 @@ export default function RecoverPage() {
     return (
         <main className="min-h-screen px-4 py-12">
             <div className="max-w-lg mx-auto space-y-4">
-                <h1 className="text-3xl font-semibold text-center">J'ai perdu mon appareil</h1>
+                <RoleHeader emoji="📱" title="J'ai perdu mon appareil" subtitle="Retrouve ton wallet sur ce nouvel appareil avec l'aide de tes gardiens. Tes fonds ne bougent pas : seule la clé qui les contrôle change." />
 
                 <Card title="1. Qui es-tu ?">
                     <Input placeholder="Ton nom d'utilisateur" value={username} onChange={(e) => setUsername(e.target.value)} />

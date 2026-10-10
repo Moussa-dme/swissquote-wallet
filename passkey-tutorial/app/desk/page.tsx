@@ -3,7 +3,7 @@
 // (pièce d'identité + signature) puis valide le dossier. Aucune vraie banque ici, aucune authentification d'agent.
 import React, { useCallback, useEffect, useState } from "react"
 import { SWISSQUOTE_URL, api, errText, fmtAddr } from "@/lib/recovery"
-import { Btn, Card, MockBadge, Msg } from "../components/ui"
+import { Btn, Card, MockBadge, Msg, RoleHeader } from "../components/ui"
 
 const STATUS: Record<string, string> = {
     awaiting_in_person_check: "à vérifier en personne",
@@ -25,7 +25,7 @@ export default function DeskPage() {
     return (
         <main className="min-h-screen px-4 py-12">
             <div className="max-w-lg mx-auto space-y-4">
-                <h1 className="text-3xl font-semibold text-center">Guichet Swissquote <MockBadge /></h1>
+                <RoleHeader emoji="🏦" title="Guichet Swissquote (simulé)" subtitle="L'agent contrôle la pièce d'identité du client en personne, puis valide son dossier." />
                 <Msg kind="info">Simulation de l'agent en agence. Il contrôle la pièce d'identité du client et sa signature, puis valide le dossier. Sans cette étape, Swissquote ne signe rien.</Msg>
                 {err && <Msg kind="err">{err}</Msg>}
                 <Card title="Dossiers de récupération">
