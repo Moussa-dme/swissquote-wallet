@@ -1,0 +1,2 @@
+# swissquote-wallet
+swissquote-wallet
