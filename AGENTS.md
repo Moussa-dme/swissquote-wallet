@@ -94,7 +94,8 @@ Principe : le bonus ne compte que si créer → signer → récupérer marche de
 - Pas de gel de compte par Swissquote ; à la place : procédure d'urgence initiée par le client.
 - Tension à trancher : délai d'annulation (protège contre une récupération malveillante) vs rapidité (téléphone volé = l'ancienne clé reste valide pendant le délai). Mentor suggère la logique « runaway ».
 
-## Commandes pour lancer la démo (2 processus + navigateurs)
+## Commandes pour lancer la démo
+(Tutoriel complet pour le binôme : `docs/DEMARRAGE.md`.) (2 processus + navigateurs)
 - App : `cd passkey-tutorial && npm run dev` -> http://localhost:3000 (pages : `/` propriétaire, `/guardian` appareil de secours / contact, `/recover` nouvel appareil, `/desk` guichet Swissquote MOCK).
 - Faux serveur Swissquote (MOCK, processus séparé, port 4000, stockage `mock-swissquote/data.json`) : `cd mock-swissquote && node --env-file=../passkey-tutorial/.env.local server.mjs`.
 - Test headless de la récupération : `cd spike && node --env-file=../passkey-tutorial/.env.local flow-test.mjs` (serveur MOCK lancé).
