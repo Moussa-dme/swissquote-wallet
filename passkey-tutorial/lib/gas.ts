@@ -18,7 +18,7 @@ export const QUOTA_PER_WALLET = Number(process.env.GAS_QUOTA_PER_WALLET_DAILY ??
 export const QUOTA_GLOBAL = Number(process.env.GAS_QUOTA_GLOBAL_DAILY ?? 500)
 export const MAX_GAS_PER_OP = Number(process.env.GAS_MAX_PER_OP ?? 5_000_000)
 
-type Day = { global: number; refused: number; wallets: Record<string, number> }
+type Day = { global: number; refused: number; paidInUsdc?: number; wallets: Record<string, number> }
 type DB = { days: Record<string, Day> }
 
 const read = (): DB => { try { return JSON.parse(fs.readFileSync(FILE, "utf8")) } catch { return { days: {} } } }
@@ -29,8 +29,16 @@ export function usage(address?: string) {
     const d = read().days[today()] ?? { global: 0, refused: 0, wallets: {} }
     return {
         day: today(), walletQuota: QUOTA_PER_WALLET, globalQuota: QUOTA_GLOBAL, maxGasPerOp: MAX_GAS_PER_OP,
-        walletUsed: address ? d.wallets[address.toLowerCase()] ?? 0 : undefined, globalUsed: d.global, refusedToday: d.refused
+        walletUsed: address ? d.wallets[address.toLowerCase()] ?? 0 : undefined, globalUsed: d.global, refusedToday: d.refused, paidInUsdcToday: d.paidInUsdc ?? 0
     }
+}
+
+// Compte une opération dont le CLIENT a payé les frais en USDC (aucun coût pour Swissquote, aucun quota)
+export function countPaid(_sender: string) {
+    const db = read(), key = today()
+    const d = (db.days[key] ??= { global: 0, refused: 0, wallets: {} })
+    d.paidInUsdc = (d.paidInUsdc ?? 0) + 1
+    write(db)
 }
 
 // Réserve une opération sponsorisée pour ce wallet, ou explique le refus

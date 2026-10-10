@@ -6,7 +6,7 @@
 // destinataire par Swissquote (MOCK) qui AVERTIT mais ne bloque jamais (aucun pouvoir sur les fonds).
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { Address, encodeFunctionData, isAddress } from "viem"
-import { SWISSQUOTE_URL, coord, errText, fmtAddr, publicClient } from "@/lib/recovery"
+import { SWISSQUOTE_URL, coord, errText, fmtAddr, kernelClientPayingInUsdc, publicClient } from "@/lib/recovery"
 import { SMALL_LIMIT_USDC, USDC, erc20Abi, fromUnits, isLarge, toUnits } from "@/lib/policy"
 import { Btn, Card, Input, MockBadge, Msg, countdown, useNow } from "./ui"
 
@@ -22,6 +22,7 @@ export default function PaymentPanel({ username, ready, account, client }: Props
     const [balance, setBalance] = useState<bigint | null>(null)
     const [preview, setPreview] = useState<Preview | null>(null)
     const [gas, setGas] = useState<any>(null)
+    const [payGasUsdc, setPayGasUsdc] = useState(false)
     const [paymentId, setPaymentId] = useState("")
     const [state, setState] = useState<any>(null)
     const [busy, setBusy] = useState("")
@@ -42,6 +43,8 @@ export default function PaymentPanel({ username, ready, account, client }: Props
         try { setGas(await fetch(`/api/gas/usage?address=${address}`).then((x) => x.json())) } catch {}
     }, [address])
     useEffect(() => { loadGas() }, [loadGas])
+    const quotaExhausted = Boolean(gas && gas.walletUsed >= gas.walletQuota)
+    useEffect(() => { if (quotaExhausted) setPayGasUsdc(true) }, [quotaExhausted])
 
     const refresh = useCallback(async () => {
         if (!username) return
@@ -80,12 +83,19 @@ export default function PaymentPanel({ username, ready, account, client }: Props
         sending.current = true
         try {
             setBusy("send")
-            const hash = await client.sendUserOperation({
-                callData: await account.encodeCalls([{ to: USDC, value: BigInt(0), data: encodeFunctionData({ abi: erc20Abi, functionName: "transfer", args: [pv.to, pv.units] }) }])
-            }) // Touch ID
-            const receipt = await client.waitForUserOperationReceipt({ hash })
+            const transfer = { to: USDC, value: BigInt(0), data: encodeFunctionData({ abi: erc20Abi, functionName: "transfer", args: [pv.to, pv.units] }) }
+            let hash, receipt
+            if (payGasUsdc) {
+                // le client paie ses frais en USDC : autorisation du paymaster + paiement dans la même opération
+                const { client: usdcClient, approveCall } = kernelClientPayingInUsdc(account)
+                hash = await usdcClient.sendUserOperation({ callData: await account.encodeCalls([await approveCall(), transfer]) }) // Touch ID
+                receipt = await usdcClient.waitForUserOperationReceipt({ hash })
+            } else {
+                hash = await client.sendUserOperation({ callData: await account.encodeCalls([transfer]) }) // Touch ID
+                receipt = await client.waitForUserOperationReceipt({ hash })
+            }
             if (paymentId) await coord(`payments/${paymentId}/done`, { txHash: receipt.receipt.transactionHash })
-            setMsg({ kind: "ok", text: `✅ ${pv.label} USDC envoyés à ${fmtAddr(pv.to)}. Frais payés par Swissquote (gasless). Transaction : ${fmtAddr(receipt.receipt.transactionHash)}` })
+            setMsg({ kind: "ok", text: `✅ ${pv.label} USDC envoyés à ${fmtAddr(pv.to)}. {payGasUsdc ? "Frais payés par toi en USDC." : "Frais payés par Swissquote (gasless)."} Transaction : ${fmtAddr(receipt.receipt.transactionHash)}` })
             setPreview(null); setPaymentId(""); setAmount(""); loadBalance(); loadGas()
         } catch (e) { setMsg({ kind: "err", text: "Envoi impossible : " + errText(e) }) }
         setBusy(""); sending.current = false
@@ -139,11 +149,15 @@ export default function PaymentPanel({ username, ready, account, client }: Props
                     <ul className="text-sm space-y-1">
                         <li>• Tu envoies <b>{preview.label} USDC</b> (jetons de test, aucune valeur réelle) à <code>{fmtAddr(preview.to)}</code>.</li>
                         <li>• Solde après : <b>{fromUnits(preview.balance >= preview.units ? preview.balance - preview.units : BigInt(0))} USDC</b>.</li>
-                        <li>• Frais de réseau : <b>0</b> pour toi (payés par Swissquote, « gasless »){gas && <> · opérations gratuites aujourd'hui : <b>{gas.walletUsed}/{gas.walletQuota}</b></>}.</li>
+                        <li>• Frais de réseau : {payGasUsdc ? <><b>payés par toi en USDC</b> (quelques centimes, prélevés en plus du montant)</> : <><b>0</b> pour toi (payés par Swissquote, « gasless »){gas && <> · opérations gratuites aujourd'hui : <b>{gas.walletUsed}/{gas.walletQuota}</b></>}</>}.</li>
                         <li>• Simulation de la transaction : {preview.simulationOk ? <b className="text-green-400">elle réussirait ✅</b> : <b className="text-red-400">elle échouerait ❌ — {preview.simulationError}</b>}</li>
                         <li>• Contrôle de l'adresse (Swissquote, <MockBadge />) : {preview.flagged ? <b className="text-red-400">⚠️ {preview.flagReason}</b> : <b className="text-green-400">aucun signalement ✅</b>}</li>
                         <li>• Niveau de contrôle : {preview.large ? <b className="text-amber-300">GROS montant → passkey + confirmation de l'appareil de secours</b> : <b>petit montant → passkey seul</b>}</li>
                     </ul>
+                    <label className="text-sm flex items-start gap-2">
+                        <input type="checkbox" className="mt-1" checked={payGasUsdc} onChange={(e) => setPayGasUsdc(e.target.checked)} />
+                        <span>Payer les frais en USDC plutôt qu'utiliser l'offre gratuite de Swissquote.{quotaExhausted && <b className="text-amber-300"> Ton quota gratuit du jour est épuisé : c'est la seule option.</b>}</span>
+                    </label>
                     {preview.flagged && <Msg kind="err">Swissquote te prévient mais ne bloque pas ton paiement : tes fonds restent sous ton seul contrôle. Es-tu certain de vouloir continuer ?</Msg>}
                     {!waiting && (
                         <Btn tone={preview.large ? "purple" : "green"} onClick={send} busy={busy === "send" || busy === "ask"} disabled={!preview.simulationOk || preview.balance < preview.units}>

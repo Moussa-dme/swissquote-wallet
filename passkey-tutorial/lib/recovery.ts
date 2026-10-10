@@ -14,7 +14,7 @@ import {
 } from "viem"
 import { sepolia } from "viem/chains"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
-import { createKernelAccount, createKernelAccountClient, createZeroDevPaymasterClient } from "@zerodev/sdk"
+import { createKernelAccount, createKernelAccountClient, createZeroDevPaymasterClient, getERC20PaymasterApproveCall } from "@zerodev/sdk"
 import {
     PasskeyValidatorContractVersion, WebAuthnMode, deserializePasskeyValidator, toPasskeyValidator, toWebAuthnKey
 } from "@zerodev/passkey-validator"
@@ -58,6 +58,21 @@ const paymaster = {
         const pm = createZeroDevPaymasterClient({ chain: CHAIN, transport: http(gasStationUrl()) })
         return pm.sponsorUserOperation({ userOperation })
     }
+}
+
+// Option « payer les frais en USDC » : le client paie lui-même, en USDC, au lieu du sponsoring de Swissquote.
+// Le paymaster prélève le montant en USDC ; le wallet doit d'abord l'y autoriser (appel « approve » ajouté
+// à la même opération). Utile surtout quand le quota gratuit du jour est épuisé.
+export const GAS_TOKEN: Address = "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238" // USDC de test (même adresse que lib/policy.ts)
+export function kernelClientPayingInUsdc(account: any) {
+    const pm = createZeroDevPaymasterClient({ chain: CHAIN, transport: http(gasStationUrl()) })
+    const paymasterUsdc = {
+        getPaymasterData: async (userOperation: any) => pm.sponsorUserOperation({ userOperation, gasToken: GAS_TOKEN } as any)
+    }
+    const client = createKernelAccountClient({ account, chain: CHAIN, bundlerTransport: http(RPC_URL), paymaster: paymasterUsdc } as any) as any
+    // autorisation donnée au paymaster de prélever jusqu'à 1 USDC de frais pour cette opération
+    const approveCall = async () => getERC20PaymasterApproveCall(pm as any, { gasToken: GAS_TOKEN, approveAmount: BigInt(1_000_000), entryPoint } as any)
+    return { client, approveCall }
 }
 
 // Message d'erreur lisible, sans fuite du Project ID
