@@ -17,3 +17,6 @@ next-env.d.ts
 
 # Scaffold-ETH 2 (bac à sable local, a son propre .git) : exclu pour l'instant
 bsa-hack/
+
+# Clés de test jetables du spike (testnet)
+spike/.keys*.json
