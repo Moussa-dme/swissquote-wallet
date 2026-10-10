@@ -55,6 +55,37 @@ Notation : implémentation technique 35, sécurité & design de garde 20, faisab
 - `bsa-hack/` : Scaffold-ETH 2 (Next.js + Foundry), a son propre `.git` et AGENTS.md/CLAUDE.md. Bac à sable pour contrats maison. **Exclu du dépôt GitHub** (voir `.gitignore`).
 - `passkey-tutorial/` : template ZeroDev (à cloner, voir journal).
 
+## Exigences du brief officiel (PDF) à ne pas oublier
+- Histoire de bout en bout : créer → se connecter et signer → perdre le wallet/les clés → récupérer.
+- 6 sujets obligatoires : (1) modèle de garde + threat model (qui peut voler, qui peut verrouiller le client, Swissquote seule ou avec un partenaire peut-elle bouger les fonds ?), (2) diagramme d'architecture avec parties MOCK marquées, (3) création du wallet (où sont générées/stockées les clés, lien avec l'identité Swissquote), (4) authentification (montant élevé vs petit), (5) récupération, (6) business case.
+- **Récupération : montrer aussi comment le client récupère ses fonds si les services Swissquote disparaissent définitivement.** Bonus si la démo refuse un attaquant qui a volé téléphone ET e-mail.
+- **Un détenteur de part/gardien mocké doit tourner comme un processus séparé, avec son propre stockage ; l'app cliente ne doit jamais détenir sa part.** (Pour nous : le « gardien Swissquote » = petit serveur à part avec sa propre base.)
+- Livrable : description du projet couvrant modèle de garde, menace, diagramme, Travel Rule (preuve de propriété d'un wallet externe, FINMA), business, bonus traités, **et quels outils d'IA ont été utilisés pour quoi** (à tenir à jour : Claude Code = aide à l'écriture/débogage du code, recherche doc, rédaction du journal).
+- Limite à défendre : ERC-4337 = EVM seulement (le MPC marche aussi pour Bitcoin).
+- Légal : si Swissquote ne peut pas bouger les fonds seule, on est plus proche d'un logiciel que d'une garde ; Swissquote + partenaire ensemble = zone grise à argumenter.
+
+## Retours des mentors Swissquote (sam. 10 oct, après-midi)
+- **Swissquote ne doit jamais avoir la clé ni aucun pouvoir sur les fonds** (point le plus important). Faux modèle : « le client s'authentifie chez Swissquote et récupère sa clé » = Swissquote devient dépositaire de clés, refusé.
+- 3 gardiens, 2 sur 3, Swissquote pouvant en être un, **validé**. Démo : montrer les DEUX scénarios (récupération + attaquant bloqué, ex. SIM swap).
+- **Authentification Swissquote = hors périmètre** (une simple base avec mot de passe suffit). En revanche la sécurité du backup est critique : numéro de téléphone/e-mail seuls ne suffisent JAMAIS ; il faut au moins un 2e facteur fort, idéalement physique (objet gardé en lieu sûr). Pire cas acceptable : se présenter au bureau avec pièce d'identité et signature. Défendre contre tous les scénarios (SIM swap, e-mail piraté...).
+- Blocage/gel par Swissquote : les clients n'aimeraient pas. Piste du mentor : pas de droit de blocage, mais **procédure d'urgence déclenchée par le client (« runaway »)** : récupérer l'accès via le système de récupération puis transférer les fonds vite, avant le pirate. À défendre dans le pitch (pourquoi on retient ou non le blocage).
+- Téléphone volé : biométrie minimum ; comment la clé est stockée sur le téléphone est important (pas un fichier texte) -> notre passkey dans la puce sécurisée répond à ça. Idée : alerte sur activité suspecte, client appelle la banque en premier.
+- MPC (Swissquote cosigne toujours) = option à présenter avec avantages/inconvénients (client bloqué si Swissquote indisponible). À nous de choisir et défendre.
+- Testnet : pas grave, on peut changer de plan ; transaction basique suffit. Que vérifier avant d'autoriser une opération : pas prioritaire.
+- Travel Rule/destinataire : en self-custody Swissquote n'a pas besoin de connaître le destinataire (comparaison distributeur de billets). Bonus : alerte si adresse frauduleuse/sanctionnée (surveillance on-chain publique).
+- **Priorité : 1) wallet fonctionnel, 2) vraie solution de récupération (point central), 3) ensuite les extras.** Expliquer d'abord wallet + backup, puis les fonctionnalités complémentaires.
+- Bonus gas : payer le gas **en USDC** (paymaster ERC-20), facile et c'est un bonus. « Gas station » : Swissquote avance le gas et refacture sur le compte ; questions d'abus/contrôle/refacturation ; idée d'abonnement Gold (ex. 200 CHF/mois pour 100 tx). Pas obligatoire que Swissquote paie.
+- Business : critère clé = **ratio bénéfice/risque** (une banque gère du risque). Faire un benchmark (ex. nb de 20-30 ans actifs en crypto en Suisse). Revenus possibles : % des Assets Under Custody (ex. 0,01 %), service de backup payant, abonnement gas station. Offre complémentaire (80-90 % des clients ne connaissent pas les wallets), pas un remplacement des banques ; on peut commencer avec 10 CHF. **Pas d'assurance** pour ce projet (récupération = obligation de moyens, best effort). **Facilité d'implémentation** = différenciateur (pas 600 jours de dev).
+- UX : se mettre à la place de l'utilisateur ; 80 % des clients ne connaissent pas la crypto -> un clic, un téléchargement, mode basique (envoyer à un ami) + bouton « Advanced ».
+- Notation bonus : 100 % + 10 % + 10 % ; **prix « Wow Effect »** pour une idée inédite et commercialisable (facultatif, ne pas se mettre la pression).
+- Le mentor revient dimanche vers 9h ; un document détaillé du challenge est partagé sur le canal de discussion.
+
+## Décisions de conception issues de ces retours (à confirmer)
+- Gardiens 2/3 : (1) appareil de secours/clé physique du client, (2) contact de confiance ou clé papier, (3) « Swissquote » MOCK = serveur séparé avec sa propre base, qui ne signe qu'après un contrôle fort simulé (identité + présence en agence), jamais sur simple SMS/e-mail.
+- La récupération doit marcher SANS Swissquote (2 autres gardiens) -> à démontrer.
+- Pas de gel de compte par Swissquote ; à la place : procédure d'urgence initiée par le client.
+- Tension à trancher : délai d'annulation (protège contre une récupération malveillante) vs rapidité (téléphone volé = l'ancienne clé reste valide pendant le délai). Mentor suggère la logique « runaway ».
+
 ## Journal de progression
 (à mettre à jour au fil du hackathon)
 
@@ -74,4 +105,5 @@ Notation : implémentation technique 35, sécurité & design de garde 20, faisab
   - Cause du blocage précédent : aucune Gas Policy → « userOp did not match any gas sponsoring policies ». Solution actuelle : « Sponsor all transactions » activé dans le dashboard ZeroDev (Gas Policies, Sepolia). **À remplacer** par des règles fines (Contract Policies = liste blanche de dApps, plafonds, webhook = screening simulé) pendant la couche Swissquote.
   - Note : jiffyscan est lent ; utiliser https://sepolia.etherscan.io/address/<adresse> pour vérifier.
   - Prochaine étape : Jalon 2 = récupération (regarder d'abord la branche `feat/example_guardian_recovery` du dépôt zerodevapp/passkey-tutorial et la doc ZeroDev sur le recovery).
+  - **Mentors Swissquote consultés (sam. après-midi)** : retours résumés dans la section « Retours des mentors » ci-dessus ; nouvelles exigences du brief (récupération sans Swissquote, gardien mocké en processus séparé, liste des outils d'IA). Priorité confirmée : récupération avant tout extra.
 
