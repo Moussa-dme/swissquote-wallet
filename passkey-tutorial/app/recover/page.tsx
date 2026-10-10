@@ -10,6 +10,7 @@ import {
 } from "@/lib/recovery"
 import { Btn, Card, Input, MockBadge, Msg, countdown, useNow } from "../components/ui"
 import PaymentPanel from "../components/PaymentPanel"
+import SwissquoteLinkPanel from "../components/SwissquoteLinkPanel"
 
 const mintAbi = parseAbi(["function mint(address _to) public"])
 const MINT_CONTRACT = "0x34bE7f35132E97915633BC1fc020364EA5134863"
@@ -169,6 +170,7 @@ export default function RecoverPage() {
                     <Btn tone="green" onClick={testTx} busy={busy === "tx"} disabled={!wallet}>Envoyer une transaction test (gasless)</Btn>
                 </Card>
                 {msg && <Msg kind={msg.kind}>{msg.text}</Msg>}
+                {wallet && <SwissquoteLinkPanel ready={true} account={wallet.account} />}
                 {wallet && <PaymentPanel username={username} ready={true} account={wallet.account} client={wallet.client} />}
             </div>
         </main>

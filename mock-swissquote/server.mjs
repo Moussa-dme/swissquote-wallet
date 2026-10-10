@@ -15,7 +15,7 @@
 import http from "node:http"
 import fs from "node:fs"
 import crypto from "node:crypto"
-import { createPublicClient, http as viemHttp, encodeFunctionData, parseAbi, isAddressEqual } from "viem"
+import { createPublicClient, http as viemHttp, encodeFunctionData, parseAbi, isAddress, isAddressEqual } from "viem"
 import { sepolia } from "viem/chains"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { createKernelAccount, createZeroDevPaymasterClient } from "@zerodev/sdk"
@@ -42,6 +42,22 @@ const load = () => (fs.existsSync(DATA_FILE) ? JSON.parse(fs.readFileSync(DATA_F
 const save = (d) => fs.writeFileSync(DATA_FILE, JSON.stringify(d, null, 2), { mode: 0o600 })
 let db = load()
 if (!db.key) { db.key = generatePrivateKey(); save(db) } // clé de TEST jetable de « Swissquote »
+
+// MOCK : base de clients Swissquote avec mot de passe. Le mentor a indiqué que l'authentification
+// Swissquote est hors périmètre (« une simple base avec mot de passe suffit »).
+const hashPw = (pw, salt) => crypto.scryptSync(pw, salt, 32).toString("hex")
+if (!db.customers) {
+    db.customers = {}
+    for (const [id, name, pw] of [["CH-1001", "Client Démo 1", "demo1234"], ["CH-1002", "Client Démo 2", "demo5678"]]) {
+        const salt = crypto.randomBytes(8).toString("hex")
+        db.customers[id] = { id, name, salt, hash: hashPw(pw, salt) }
+    }
+    save(db)
+}
+db.links ??= {} // liaisons client -> wallets dont la propriété a été prouvée
+const sessions = new Map() // jeton -> { customer, exp }
+const challenges = new Map() // nonce -> { customer, address, message, exp }
+const sessionOf = (token) => { const x = sessions.get(token); return x && x.exp > Date.now() ? x : null }
 const swissquote = privateKeyToAccount(db.key)
 
 // --- helpers ---
@@ -92,6 +108,61 @@ const routes = {
     "GET /screen/:address": async (_b, p) => {
         const reason = FLAGGED[String(p.address).toLowerCase()]
         return [200, { address: p.address, flagged: Boolean(reason), reason: reason ?? null, mock: true }]
+    },
+
+    // ----- Compte Swissquote et liaison avec le wallet (sujet 3 du brief + Travel Rule) -----
+    // Connexion au compte Swissquote (MOCK : numéro de client + mot de passe)
+    "POST /auth/login": async (b) => {
+        const c = db.customers[String(b.customer ?? "").toUpperCase()]
+        const ok = c && crypto.timingSafeEqual(Buffer.from(hashPw(String(b.password ?? ""), c.salt), "hex"), Buffer.from(c.hash, "hex"))
+        if (!ok) return [401, { error: "Numéro de client ou mot de passe incorrect." }]
+        const token = crypto.randomBytes(16).toString("hex")
+        sessions.set(token, { customer: c.id, exp: Date.now() + 30 * 60 * 1000 })
+        return [200, { token, customer: c.id, name: c.name }]
+    },
+
+    // Étape 1 de la preuve de propriété : un message à signer, unique, qui expire
+    "POST /wallet/challenge": async (b) => {
+        const sess = sessionOf(b.token)
+        if (!sess) return [401, { error: "Connecte-toi d'abord à ton compte Swissquote." }]
+        if (!isAddress(b.address)) return [400, { error: "adresse invalide" }]
+        const nonce = crypto.randomBytes(8).toString("hex"), exp = Date.now() + 5 * 60 * 1000
+        const message = `Swissquote — preuve de propriété du wallet\nJe contrôle le wallet ${b.address} et je le lie au client ${sess.customer}.\nNonce : ${nonce}`
+        challenges.set(nonce, { customer: sess.customer, address: b.address, message, exp })
+        return [200, { nonce, message, expiresAt: exp }]
+    },
+
+    // Étape 2 : le wallet signe le message ; Swissquote vérifie la signature ON-CHAIN (ERC-1271, car le wallet
+    // est un compte intelligent), sans jamais voir la moindre clé.
+    "POST /wallet/link": async (b) => {
+        const sess = sessionOf(b.token)
+        if (!sess) return [401, { error: "Connecte-toi d'abord à ton compte Swissquote." }]
+        const ch = challenges.get(b.nonce)
+        if (!ch || ch.exp < Date.now()) return [400, { error: "Défi expiré ou inconnu : recommence." }]
+        if (ch.customer !== sess.customer || !isAddressEqual(ch.address, b.address) || ch.message !== b.message) return [403, { error: "Le message signé ne correspond pas au défi." }]
+        challenges.delete(b.nonce) // usage unique : pas de rejeu
+        let valid = false
+        try { valid = await publicClient.verifyMessage({ address: b.address, message: ch.message, signature: b.signature }) } catch (e) { return [403, { error: "Vérification de la signature impossible : " + safe(e) }] }
+        if (!valid) return [403, { error: "Signature invalide : ce wallet n'a pas signé le message." }]
+        const list = (db.links[sess.customer] ??= [])
+        if (!list.some((l) => isAddressEqual(l.address, b.address))) list.push({ address: b.address, verifiedAt: Date.now(), method: "signature de message vérifiée on-chain (ERC-1271)" })
+        save(db)
+        return [200, { linked: true, customer: sess.customer, address: b.address }]
+    },
+    "POST /wallet/links": async (b) => {
+        const sess = sessionOf(b.token)
+        return sess ? [200, { customer: sess.customer, links: db.links[sess.customer] ?? [] }] : [401, { error: "Connecte-toi d'abord." }]
+    },
+
+    // MOCK de la Travel Rule : un retrait du compte Swissquote vers un wallet externe n'est autorisé
+    // QUE si le client a prouvé en être le propriétaire. (La banque ne voit ni clé ni fonds du wallet.)
+    "POST /withdraw": async (b) => {
+        const sess = sessionOf(b.token)
+        if (!sess) return [401, { error: "Connecte-toi d'abord à ton compte Swissquote." }]
+        if (!isAddress(b.to)) return [400, { error: "adresse invalide" }]
+        const link = (db.links[sess.customer] ?? []).find((l) => isAddressEqual(l.address, b.to))
+        if (!link) return [403, { allowed: false, reason: "Wallet externe non vérifié : prouve que tu en es le propriétaire (signature) avant tout retrait. C'est exigé par la Travel Rule appliquée par la FINMA." }]
+        return [200, { allowed: true, mock: true, reason: `Propriété du wallet vérifiée le ${new Date(link.verifiedAt).toLocaleString("fr-CH")} (${link.method}). Retrait de ${b.amount ?? "?"} autorisé (simulation : aucun fonds réel n'est déplacé).` }]
     },
 
     // Le client démarre une demande de récupération (dossier KYC simulé)

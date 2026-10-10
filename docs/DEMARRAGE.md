@@ -222,6 +222,20 @@ Après une récupération, le **même** panneau apparaît sur `/recover` une foi
 
 ---
 
+## 6 ter. Scénario F : lier le wallet au compte Swissquote (preuve de propriété)
+
+*Montre comment le wallet est relié à l'identité du client, et la règle « Travel Rule » : la banque n'envoie vers un wallet externe qu'après avoir vérifié qui le possède.*
+
+Sur la page d'accueil (navigateur A, wallet connecté), carte **« Compte Swissquote et preuve de propriété »** (étiquette MOCK) :
+1. Connecte-toi avec le compte de démonstration : **CH-1001** / **demo1234**, puis **Se connecter à Swissquote**.
+2. Clique sur **Vers mon wallet** *avant* toute preuve : retrait **refusé** (« Wallet externe non vérifié… Travel Rule »).
+3. Clique sur **Prouver que ce wallet m'appartient (Touch ID)** : ton wallet signe un message ; Swissquote vérifie la signature **sur la blockchain**, sans voir aucune clé. Le wallet apparaît comme « 🔗 lié ».
+4. Reclique sur **Vers mon wallet** : retrait **autorisé** (simulation : aucun fonds réel ne bouge). Clique sur **Vers une adresse inconnue** : **refusé**.
+
+> La liaison **reste valable après une récupération** : l'adresse du wallet ne change pas, seule la clé qui le contrôle change.
+
+---
+
 ## 7. Ce que tu dois observer (pour le pitch et le produit)
 
 Pendant que tu testes, note :
@@ -243,6 +257,7 @@ Pendant que tu testes, note :
 | Gardien « Swissquote » | **MOCK** : un petit serveur à part, avec sa propre clé |
 | Vérification d'identité en agence (KYC) | **MOCK** : la page `/desk` joue l'agent |
 | Contrôle petit / gros montant (confirmation du second appareil) | **Appliqué par l'app et le coordinateur** (simulation) ; en production : on-chain |
+| Compte Swissquote (numéro de client + mot de passe) et retrait vers un wallet | **MOCK** : base inventée ; la vérification de la signature du wallet, elle, est **réelle** (sur la blockchain) |
 | Contrôle des adresses destinataires (adresses signalées) | **MOCK** : liste inventée dans le faux serveur Swissquote ; avertit, ne bloque pas |
 | USDC de test | **Réel** sur Sepolia (jeton de test Circle, sans valeur) |
 | Délai de sécurité annulable | **Appliqué hors chaîne** (par notre coordinateur) : limite à expliquer ; en production, un délai sur la blockchain |

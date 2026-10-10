@@ -17,6 +17,7 @@ import { createPublicClient, http, parseAbi, encodeFunctionData } from "viem"
 import { sepolia } from "viem/chains"
 import OwnerRecoveryPanel from "./components/OwnerRecoveryPanel"
 import PaymentPanel from "./components/PaymentPanel"
+import SwissquoteLinkPanel from "./components/SwissquoteLinkPanel"
 
 const CHAIN = sepolia
 // URLs lues depuis .env.local (voir .env.example) pour ne pas mettre le Project ID dans Git
@@ -301,6 +302,9 @@ export default function Home() {
                             />
                         )}
                     </div>
+
+                    {/* Liaison au compte Swissquote + preuve de propriété (Travel Rule) */}
+                    <SwissquoteLinkPanel ready={isKernelClientReady} account={kernelAccount} />
 
                     {/* Paiement USDC avec contrôle petit / gros montant */}
                     <PaymentPanel username={username} ready={isKernelClientReady} account={kernelAccount} client={kernelClient} />
