@@ -41,6 +41,8 @@ Les fonds du client (ici des USDC de test sur Sepolia) et son **contrôle** : lu
 7. **Avertissement** si l'adresse destinataire est signalée (sans blocage : le client reste libre).
 8. **Preuve de propriété** (signature vérifiée sur la blockchain) avant tout retrait de la banque vers le wallet.
 
+**Procédure d'urgence côté client (« runaway »)**, proposée par le mentor à la place d'un gel par la banque : le client récupère son accès via ses gardiens puis déplace ses fonds tout de suite. Elle ne dépend d'aucun pouvoir de blocage de Swissquote. Son talon d'Achille est le **délai** pendant lequel l'ancienne clé reste valide (voir 3.9), d'où le plafond des petits paiements et le second appareil.
+
 ## 3. Limites et risques résiduels (à assumer devant le jury)
 
 ### 3.1 Swissquote + un autre gardien (zone grise)

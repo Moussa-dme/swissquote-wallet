@@ -21,6 +21,8 @@
 ### Argument central
 *Swissquote fournit un logiciel et un service d'assistance à la récupération. Elle ne détient aucune clé, ne peut pas disposer seule des fonds, ne peut ni bloquer ni geler un paiement, et le client peut se passer d'elle. Le wallet est donc plus proche d'un **logiciel** que d'une **garde**.*
 
+**Absence de pouvoir de blocage et « runaway ».** Swissquote ne se réserve **aucun droit de geler ou bloquer** un wallet (ce serait un pouvoir sur les fonds, et les clients ne l'accepteraient pas, selon le mentor). Elle offre à la place au client une **procédure d'urgence qu'il déclenche lui-même** : récupérer l'accès puis déplacer ses fonds sans attendre.
+
 ### La zone grise : Swissquote + un autre gardien
 Dans la version actuelle, Swissquote **et** le contact de confiance (2 voix sur 3) pourraient remplacer la clé du client **sans lui**.
 - **Pour que ce ne soit pas de la garde** : le contact est **choisi par le client** ; Swissquote n'agit qu'après une **vérification d'identité en personne** ; un **délai** laisse au client le temps d'être alerté et d'**annuler** ; la banque ne peut **jamais agir seule**.

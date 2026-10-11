@@ -21,7 +21,7 @@ const publicClient = createPublicClient({ chain: sepolia, transport: http(RPC) }
 const paymaster = { getPaymasterData: (userOperation) => createZeroDevPaymasterClient({ chain: sepolia, transport: http(RPC) }).sponsorUserOperation({ userOperation }) }
 const post = async (p, b) => { const r = await fetch(SQ + p, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(b ?? {}) }); return [r.status, await r.json()] }
 
-const KF = new URL("./.keys_flow.json", import.meta.url)
+const KF = new URL(`./.keys_flow${process.env.TAG ?? ""}.json`, import.meta.url)
 const k = fs.existsSync(KF) ? JSON.parse(fs.readFileSync(KF, "utf8")) : {}
 for (const n of ["owner", "newOwner", "backup", "contact", "dummy"]) if (!k[n]) k[n] = generatePrivateKey()
 fs.writeFileSync(KF, JSON.stringify(k, null, 2), { mode: 0o600 })

@@ -32,7 +32,7 @@ Les **scripts de test** (dossier `spike/`) sont la meilleure documentation : cha
 | Promesse | Commande | Ce que tu verras |
 |---|---|---|
 | Récupération complète, Swissquote seule refusée, code SMS refusé, ancien propriétaire refusé | `cd spike && node --env-file=../passkey-tutorial/.env.local flow-test.mjs` | 9 lignes ✅ |
-| Preuve de propriété et Travel Rule | `… link-test.mjs` | 10 lignes ✅ |
+| Preuve de propriété et Travel Rule | `… link-test.mjs` (à lancer **une seule fois** par wallet de test : le wallet reste lié ensuite) | 10 lignes ✅ |
 | Confirmation des gros paiements | `… payment-test.mjs` | 7 lignes ✅ |
 | Gas station | `… gas-test.mjs` | 6 lignes ✅ |
 | Vérification du code des dApps | `… dapp-test.mjs` | 5 lignes ✅ |
@@ -65,6 +65,7 @@ Les **scripts de test** (dossier `spike/`) sont la meilleure documentation : cha
 6. *Qu'avez-vous codé vous-mêmes ?* Les décisions de conception, les tests avec de vrais passkeys, la validation des cas d'attaque. Le code a été écrit avec Claude Code, ce qui est déclaré.
 
 **Sécurité**
+6bis. *Pourquoi Swissquote ne peut-elle pas geler un compte volé ?* Un droit de blocage serait un pouvoir sur les fonds (donc de la garde) et les clients n'en veulent pas ; à la place, le client déclenche lui-même une procédure d'urgence (« runaway ») : il récupère l'accès avec ses gardiens puis déplace ses fonds tout de suite.
 7. *Et si le téléphone est volé ?* Petits montants limités ; gros paiements : second appareil ; une récupération suspecte est annulable.
 8. *Et si l'attaquant a le numéro et l'e-mail ?* Un code SMS ou e-mail ne suffit jamais : Swissquote exige une vérification en personne.
 9. *Swissquote + le contact peuvent récupérer sans le client ?* Oui, c'est la zone grise assumée (choix de conception, atténuée par la vérification en personne, le délai et l'alerte) ; un mode « haute sécurité » est décrit.
