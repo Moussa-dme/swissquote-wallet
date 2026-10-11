@@ -24,7 +24,7 @@ Mode d'emploi pas à pas : [`DEMARRAGE.md`](DEMARRAGE.md).
 | Split backup (Shamir) | Il faut reconstituer la phrase quelque part : un point de compromission. |
 | **ERC-4337 + passkey + gardiens (notre choix)** | Pas de phrase à garder ; la clé reste dans la puce de l'appareil ; la récupération est une **règle imposée par la blockchain**, sans point où la clé est reconstituée. **Limite : EVM seulement.** |
 
-**Avantages** : la banque ne détient aucune clé ; une seule voix de la banque ne suffit pas ; la récupération marche sans la banque ; briques existantes (aucune cryptographie maison) ; simple pour le client (Touch ID).
+**Avantages** : la banque ne détient **aucune clé du client** (seulement sa clé de gardien, 1 voix sur 3) ; une seule voix de la banque ne suffit pas ; la récupération marche sans la banque ; briques existantes (aucune cryptographie maison) ; simple pour le client (Touch ID).
 **Inconvénients** : EVM seulement ; dépendance à un fournisseur de comptes intelligents ; zone grise si Swissquote et un autre gardien s'allient (voir `MENACE.md` 3.1).
 
 **Choix assumé : tous les gardiens pèsent pareil (2 voix sur 3).** Un client qui a tout perdu peut ainsi récupérer avec son contact et Swissquote après vérification en personne (le « pire cas » décrit par le mentor). Le prix est la zone grise « Swissquote + un autre gardien », atténuée par la vérification en personne, le délai, l'alerte et l'annulation. Un mode « haute sécurité » où Swissquote ne peut aider **qu'avec l'appareil du client** est décrit comme variante configurable (non implémentée).
@@ -67,7 +67,7 @@ Détail et sources : [`LEGAL.md`](LEGAL.md).
 ## 8. Business case
 Détail, sources et modèle d'hypothèses : [`BUSINESS.md`](BUSINESS.md).
 
-Swissquote perd aujourd'hui les clients qui veulent le self-custody. Notre wallet leur permet de **garder leurs clés tout en restant clients**. Le marché existe (23 % des Suisses possèdent des cryptos selon Bitpanda / YouGov 2024), mais 80 à 90 % des clients de la banque ne connaissent pas les wallets : c'est une **option complémentaire**. Les revenus viennent de la **rétention**, d'un **service de récupération payant** et d'un **abonnement « gas station »** ; un pourcentage des actifs seul est négligeable (à 0,01 %, 500 CHF par an pour 1 000 clients à 5 000 CHF, selon nos hypothèses). Les coûts sont maîtrisés : **pas d'assurance**, gas plafonné, développement léger car **aucune cryptographie ni contrat maison**. **Risque faible** : la banque n'a aucune clé et ne peut rien déplacer seule.
+Swissquote perd aujourd'hui les clients qui veulent le self-custody. Notre wallet leur permet de **garder leurs clés tout en restant clients**. Le marché existe (23 % des Suisses possèdent des cryptos selon Bitpanda / YouGov 2024), mais 80 à 90 % des clients de la banque ne connaissent pas les wallets : c'est une **option complémentaire**. Les revenus viennent de la **rétention**, d'un **service de récupération payant** et d'un **abonnement « gas station »** ; un pourcentage des actifs seul est négligeable (à 0,01 %, 500 CHF par an pour 1 000 clients à 5 000 CHF, selon nos hypothèses). Les coûts sont maîtrisés : **pas d'assurance**, gas plafonné, développement léger car **aucune cryptographie ni contrat maison**. **Risque faible** : la banque n'a aucune clé du client et ne peut rien déplacer seule.
 
 ## 9. Bonus traités
 | Bonus | Ce qui est fait |

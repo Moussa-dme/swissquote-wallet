@@ -40,7 +40,7 @@ Le gardien Swissquote (processus séparé, stockage propre), l'agence et le KYC,
 Le délai de sécurité est appliqué hors chaîne (production : délai sur la blockchain) ; la règle petit / gros montant est appliquée par l'application (production : imposée par le wallet) ; zone grise « Swissquote + un autre gardien » reconnue et atténuée ; passkeys éventuellement synchronisés par Apple / Google. Détail : `docs/MENACE.md`.
 
 ### Business case (résumé)
-Garder les clients qui partaient, un service de récupération payant, un abonnement « gas station » ; risque faible car la banque n'a aucune clé et ne peut rien déplacer seule ; aucune assurance engagée ; développement léger (aucune cryptographie ni contrat maison). Détail et hypothèses : `docs/BUSINESS.md`.
+Garder les clients qui partaient, un service de récupération payant, un abonnement « gas station » ; risque faible car la banque n'a aucune clé du client et ne peut rien déplacer seule ; aucune assurance engagée ; développement léger (aucune cryptographie ni contrat maison). Détail et hypothèses : `docs/BUSINESS.md`.
 
 ### Outils d'IA utilisés
 **Claude Code** (Claude Sonnet 5.5) : lecture de la documentation et des SDK, conception et études de faisabilité par scripts, écriture du code, débogage, brouillons de documentation. **[Autres outils du binôme à ajouter.]** Les décisions de conception, les tests avec de vrais passkeys et la validation des cas d'attaque ont été faits par l'équipe.

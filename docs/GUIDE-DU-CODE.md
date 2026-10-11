@@ -72,7 +72,7 @@ Les **scripts de test** (dossier `spike/`) sont la meilleure documentation : cha
 10. *Les passkeys se synchronisent chez Apple / Google ?* Oui, risque connu et documenté ; atténué par les plafonds et le second appareil.
 
 **Légal et business**
-11. *C'est de la garde ?* Swissquote n'a aucune clé et ne peut rien déplacer seule : plus proche d'un logiciel (à vérifier sur les textes officiels).
+11. *C'est de la garde ?* Swissquote n'a aucune clé du client (seulement sa clé de gardien : 1 voix sur 3) et ne peut rien déplacer seule : plus proche d'un logiciel (à vérifier sur les textes officiels).
 12. *Comment respectez-vous la Travel Rule ?* Preuve de propriété par signature vérifiée sur la blockchain avant tout retrait.
 13. *Comment Swissquote gagne de l'argent ?* Rétention, service de récupération payant, abonnement « gas station » ; le pourcentage des actifs seul est négligeable (voir `BUSINESS.md`).
 

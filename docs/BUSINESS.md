@@ -46,10 +46,10 @@
 | Risque | Atténuation |
 |---|---|
 | Perte de fonds par un client | Le client assume ses clés ; récupération en « best effort ». |
-| Qualification réglementaire | Voir `LEGAL.md` (aucune clé, aucune disposition seule, aucun blocage). |
+| Qualification réglementaire | Voir `LEGAL.md` (aucune clé du client, aucune disposition seule, aucun blocage). |
 | Abus du gas sponsorisé | Plafonds par client, liste de contrats, abonnement. |
 | Dépendance à un fournisseur | Voir `MENACE.md` 3.8. |
-| **Conclusion** | **Risque faible** : la banque n'a aucune clé et ne peut rien déplacer seule, la récupération est à 2 voix sur 3 avec vérification en personne, aucune assurance engagée. |
+| **Conclusion** | **Risque faible** : la banque n'a aucune clé du client et ne peut rien déplacer seule, la récupération est à 2 voix sur 3 avec vérification en personne, aucune assurance engagée. |
 
 ## Facilité d'implémentation (différenciateur cité par le mentor)
 Le mentor a dit qu'une solution demandant « 600 jours de développement » est un problème. Notre atout : **aucune cryptographie ni aucun contrat maison**, des **briques existantes** (compte intelligent, passkeys, multisig, paymaster), et un **prototype complet construit en une nuit**. **Reste à industrialiser** : délai de récupération sur la blockchain, vrai KYC et vraie agence, clé physique pour l'appareil de secours, politique de frais, audit de sécurité. **[À ESTIMER en jours de développement.]**

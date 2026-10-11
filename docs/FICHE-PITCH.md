@@ -20,11 +20,11 @@
 | **Téléphone volé + numéro + e-mail ?** | Touch ID d'abord. Puis : **petits paiements plafonnés**, **second appareil pour les gros**, **SMS / e-mail refusés** par Swissquote pour la récupération, propriétaire **alerté** et capable d'annuler. |
 | **Et si Swissquote disparaît ?** | **Appareil de secours + contact** suffisent (démontré). |
 | **Pourquoi Swissquote ne gèle pas un compte volé ?** | Un droit de blocage serait un **pouvoir sur les fonds** (donc de la garde) et les clients n'en veulent pas. À la place : le client **récupère puis déplace ses fonds tout de suite** (procédure d'urgence, « runaway »). |
-| **C'est de la garde ?** | Critère : **qui peut déplacer les fonds**. Swissquote n'a **aucune clé** et **ne peut rien déplacer seule**, ne peut ni bloquer ni geler : plus proche d'un **logiciel**. *(Pas un avis juridique ; références à vérifier.)* |
+| **C'est de la garde ?** | Critère : **qui peut déplacer les fonds**. Swissquote n'a **aucune clé du client** (seulement sa clé de gardien : 1 voix sur 3) et **ne peut rien déplacer seule**, ne peut ni bloquer ni geler : plus proche d'un **logiciel**. *(Pas un avis juridique ; références à vérifier.)* |
 | **Travel Rule ?** | Preuve de propriété : le wallet **signe un message**, Swissquote **vérifie la signature sur la blockchain** sans voir de clé ; retrait **autorisé seulement vers un wallet vérifié**. |
 | **Qu'est-ce qui est simulé ?** | Le gardien Swissquote, l'agence, les comptes clients, le registre de dApps, la gas station, les clés de l'appareil de secours et du contact. **La sécurité de la clé du client n'en dépend pas.** |
 | **Qui a écrit le code ?** | Écrit avec **Claude Code** (déclaré). Nous : conception, tests avec de vrais passkeys, validation des cas d'attaque. |
-| **Comment Swissquote gagne ?** | **Rétention** des clients qui partaient, **service de récupération payant**, **abonnement « gas station »**. Risque faible : aucune clé, aucune assurance. |
+| **Comment Swissquote gagne ?** | **Rétention** des clients qui partaient, **service de récupération payant**, **abonnement « gas station »**. Risque faible : aucune clé du client, aucune assurance. |
 | **Les frais ?** | Payés par Swissquote avec **quota** (anti-abus) ; au-delà, **le client paie en USDC**. |
 | **Les dApps ?** | Liste approuvée + **empreinte du code vérifiée par le wallet** : une même adresse ne garantit pas le même code. |
 

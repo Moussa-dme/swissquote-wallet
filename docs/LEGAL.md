@@ -19,7 +19,7 @@
 | **Cadre contractuel** à prévoir | La récupération assistée est une **obligation de moyens** (« best effort », selon le mentor), pas un droit de la banque sur les fonds. Les conditions doivent dire que Swissquote **ne peut ni bloquer, ni déplacer, ni modifier le contrôle seule**. |
 
 ### Argument central
-*Swissquote fournit un logiciel et un service d'assistance à la récupération. Elle ne détient aucune clé, ne peut pas disposer seule des fonds, ne peut ni bloquer ni geler un paiement, et le client peut se passer d'elle. Le wallet est donc plus proche d'un **logiciel** que d'une **garde**.*
+*Swissquote fournit un logiciel et un service d'assistance à la récupération. Elle ne détient aucune clé du client, ne peut pas disposer seule des fonds, ne peut ni bloquer ni geler un paiement, et le client peut se passer d'elle. Le wallet est donc plus proche d'un **logiciel** que d'une **garde**.*
 
 **Absence de pouvoir de blocage et « runaway ».** Swissquote ne se réserve **aucun droit de geler ou bloquer** un wallet (ce serait un pouvoir sur les fonds, et les clients ne l'accepteraient pas, selon le mentor). Elle offre à la place au client une **procédure d'urgence qu'il déclenche lui-même** : récupérer l'accès puis déplacer ses fonds sans attendre.
 
@@ -57,7 +57,7 @@ Le mentor a comparé avec le **distributeur de billets** : une fois les fonds so
 - **KYC** : la vérification en personne à l'agence **réutilise** le KYC existant de la banque (simulé ici).
 
 ## 4. Position à défendre devant le jury (résumé)
-1. **Swissquote ne détient aucune clé et ne peut pas disposer seule des fonds.** Le wallet est donc plus proche d'un logiciel que d'une garde.
+1. **Swissquote ne détient aucune clé du client et ne peut pas disposer seule des fonds** (elle n'a que la clé de son rôle de gardien : 1 voix sur 3, qui ne sert qu'à aider à remplacer la clé, jamais à payer). Le wallet est donc plus proche d'un logiciel que d'une garde.
 2. **Elle n'a aucun pouvoir de blocage** (elle avertit), et **le client peut récupérer sans elle**.
 3. **La zone grise** (Swissquote + un autre gardien) est reconnue, atténuée (vérification en personne, délai, alerte, annulation) et peut être **supprimée** par une variante stricte.
 4. **La Travel Rule est respectée** par une preuve de propriété par signature vérifiée sur la blockchain, avant tout retrait.
