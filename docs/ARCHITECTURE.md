@@ -93,6 +93,8 @@ flowchart LR
     DESK -->|"identité vérifiée en personne"| SQB
     OWNER <-->|"liaison, preuve de propriété, contrôle d'adresse"| SQB
     SQB -.- SQG
+    BACKUP -->|"finalise : signe en dernier et envoie"| GUARD
+    CONTACT -->|"finalise : signe en dernier et envoie"| GUARD
     GUARD -->|"remplace la clé du propriétaire"| RECOV
     RECOV -->|"nouveau propriétaire"| ACCOUNT
     ACCOUNT -->|"envoie / reçoit"| USDC

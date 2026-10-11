@@ -75,6 +75,8 @@
     DESK --&gt;|&quot;identité vérifiée en personne&quot;| SQB
     OWNER &lt;--&gt;|&quot;liaison, preuve de propriété, contrôle d&#x27;adresse&quot;| SQB
     SQB -.- SQG
+    BACKUP --&gt;|&quot;finalise : signe en dernier et envoie&quot;| GUARD
+    CONTACT --&gt;|&quot;finalise : signe en dernier et envoie&quot;| GUARD
     GUARD --&gt;|&quot;remplace la clé du propriétaire&quot;| RECOV
     RECOV --&gt;|&quot;nouveau propriétaire&quot;| ACCOUNT
     ACCOUNT --&gt;|&quot;envoie / reçoit&quot;| USDC
