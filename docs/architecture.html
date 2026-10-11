@@ -4,7 +4,31 @@
 <p class="leg"><span style="background:#bbf7d0;border-color:#15803d">Réel</span><span style="background:#fde68a;border-color:#b45309">MOCK (simulé)</span><span style="background:#bfdbfe;border-color:#1d4ed8">Service externe</span></p>
 <h1>Architecture</h1>
 <p class="note">Brouillon factuel. **Vert = réel** (code ou service qui fonctionne vraiment, sur la blockchain de test Sepolia). **Orange = MOCK** (simulation, clairement étiquetée dans le code et l&#x27;interface). Les schémas s&#x27;affichent directement sur GitHub (format Mermaid) ; pour les slides, on peut les exporter en image avec &lt;https://mermaid.live&gt; (coller le code, « PNG »).</p>
-<h2>1. Vue d&#x27;ensemble : qui parle à qui</h2>
+<h2>0. Version pour la présentation (7 boîtes)</h2>
+<p class="note">**À mettre sur les slides.** Vert = réel, orange = simulé (MOCK), bleu = service externe. La vue détaillée est en section 1.</p>
+<pre class="mermaid">flowchart LR
+    classDef real fill:#bbf7d0,stroke:#15803d,color:#052e16
+    classDef mock fill:#fde68a,stroke:#b45309,color:#451a03
+    classDef ext fill:#bfdbfe,stroke:#1d4ed8,color:#172554
+
+    CLIENT[&quot;Le client&lt;br/&gt;passkey (Touch ID)&lt;br/&gt;sur son appareil&quot;]:::real
+    APP[&quot;Application du wallet&quot;]:::real
+    COORD[&quot;Coordinateur de récupération&lt;br/&gt;délai annulable&quot;]:::mock
+    GARD[&quot;Appareil de secours&lt;br/&gt;et contact de confiance&quot;]:::mock
+    SQ[&quot;Swissquote&lt;br/&gt;gardien n°3 (1 voix sur 3)&lt;br/&gt;agence, comptes, contrôles&quot;]:::mock
+    ZD[&quot;ZeroDev&lt;br/&gt;passkeys, frais payés&quot;]:::ext
+    CHAIN[&quot;Blockchain (Sepolia)&lt;br/&gt;wallet du client&lt;br/&gt;gardien 2 sur 3 · récupération&quot;]:::real
+
+    CLIENT --&gt;|&quot;signe avec Touch ID&quot;| APP
+    APP --&gt;|&quot;transactions&quot;| ZD
+    ZD --&gt; CHAIN
+    APP &lt;--&gt; COORD
+    GARD --&gt;|&quot;approuvent&quot;| COORD
+    SQ --&gt;|&quot;approuve après vérification en personne&quot;| COORD
+    COORD --&gt;|&quot;2 gardiens sur 3 finalisent&quot;| CHAIN
+</pre>
+<p class="note">Comment le lire (20 secondes) : le client signe avec Touch ID. S&#x27;il perd son appareil, deux gardiens sur trois (son appareil de secours, son contact, ou Swissquote après vérification en personne) approuvent, et la blockchain remplace sa clé. Swissquote seule ne peut rien.</p>
+<h2>1. Vue détaillée : qui parle à qui</h2>
 <pre class="mermaid">flowchart LR
     classDef real fill:#bbf7d0,stroke:#15803d,color:#052e16
     classDef mock fill:#fde68a,stroke:#b45309,color:#451a03

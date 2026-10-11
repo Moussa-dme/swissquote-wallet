@@ -2,7 +2,36 @@
 
 > Brouillon factuel. **Vert = réel** (code ou service qui fonctionne vraiment, sur la blockchain de test Sepolia). **Orange = MOCK** (simulation, clairement étiquetée dans le code et l'interface). Les schémas s'affichent directement sur GitHub (format Mermaid) ; pour les slides, on peut les exporter en image avec <https://mermaid.live> (coller le code, « PNG »).
 
-## 1. Vue d'ensemble : qui parle à qui
+## 0. Version pour la présentation (7 boîtes)
+
+> **À mettre sur les slides.** Vert = réel, orange = simulé (MOCK), bleu = service externe. La vue détaillée est en section 1.
+
+```mermaid
+flowchart LR
+    classDef real fill:#bbf7d0,stroke:#15803d,color:#052e16
+    classDef mock fill:#fde68a,stroke:#b45309,color:#451a03
+    classDef ext fill:#bfdbfe,stroke:#1d4ed8,color:#172554
+
+    CLIENT["Le client<br/>passkey (Touch ID)<br/>sur son appareil"]:::real
+    APP["Application du wallet"]:::real
+    COORD["Coordinateur de récupération<br/>délai annulable"]:::mock
+    GARD["Appareil de secours<br/>et contact de confiance"]:::mock
+    SQ["Swissquote<br/>gardien n°3 (1 voix sur 3)<br/>agence, comptes, contrôles"]:::mock
+    ZD["ZeroDev<br/>passkeys, frais payés"]:::ext
+    CHAIN["Blockchain (Sepolia)<br/>wallet du client<br/>gardien 2 sur 3 · récupération"]:::real
+
+    CLIENT -->|"signe avec Touch ID"| APP
+    APP -->|"transactions"| ZD
+    ZD --> CHAIN
+    APP <--> COORD
+    GARD -->|"approuvent"| COORD
+    SQ -->|"approuve après vérification en personne"| COORD
+    COORD -->|"2 gardiens sur 3 finalisent"| CHAIN
+```
+
+**Comment le lire (20 secondes) :** le client signe avec Touch ID. S'il perd son appareil, **deux gardiens sur trois** (son appareil de secours, son contact, ou Swissquote après vérification en personne) approuvent, et la **blockchain** remplace sa clé. **Swissquote seule ne peut rien.**
+
+## 1. Vue détaillée : qui parle à qui
 
 ```mermaid
 flowchart LR
