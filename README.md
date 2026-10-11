@@ -13,6 +13,7 @@ Un wallet crypto dont le client garde les clés (passkey, Touch ID), avec une **
 | [`docs/LEGAL.md`](docs/LEGAL.md) | Garde et Travel Rule |
 | [`docs/BUSINESS.md`](docs/BUSINESS.md) | Business case |
 | [`docs/DEMARRAGE.md`](docs/DEMARRAGE.md) | **Installer et tester la démo pas à pas** |
+| [`docs/PITCH-SQUELETTE.md`](docs/PITCH-SQUELETTE.md) | Squelette du pitch en direct (≈ 8 min) |
 | [`docs/FICHE-PITCH.md`](docs/FICHE-PITCH.md) | Fiche d'une page : pitch en 5 phrases et réponses clés |
 | [`docs/SCRIPT-VIDEO.md`](docs/SCRIPT-VIDEO.md) | Script de la vidéo de démo, minute par minute |
 | [`docs/GUIDE-DU-CODE.md`](docs/GUIDE-DU-CODE.md) | **Comprendre le code** : les 8 mécanismes, où est la preuve, questions du jury |
