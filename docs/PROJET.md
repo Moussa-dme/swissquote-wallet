@@ -94,6 +94,21 @@ Swissquote perd aujourd'hui les clients qui veulent le self-custody. Notre walle
 | Registre des dApps approuvées | **MOCK** (une dApp de démonstration) ; la vérification de l'empreinte du code par le wallet est **réelle** |
 | Gas station (quotas de frais) | **MOCK** (service de l'app) ; le paymaster est réel |
 
+## 10 bis. Cryptographie et sécurité du transport
+
+**Cryptographie : uniquement des briques établies, aucune cryptographie maison** (exigence du brief).
+| Où | Quoi | Fourni par |
+|---|---|---|
+| Clé du client | **Passkey (WebAuthn)** : signature à courbe elliptique **P-256**, générée et gardée dans la puce sécurisée de l'appareil | Navigateur et système d'exploitation ; vérifiée sur la blockchain par le contrat de ZeroDev |
+| Clés des gardiens | **ECDSA secp256k1** (standard d'Ethereum) | `viem` |
+| Approbations des gardiens | Signatures **EIP-712** (message typé) agrégées par un multisig pondéré | ZeroDev (WeightedValidator) |
+| Preuve de propriété, annulation par le propriétaire | **ERC-1271** : la blockchain vérifie la signature d'un compte intelligent | `viem` + contrat du wallet |
+| Empreinte du code d'une dApp | Hachage **keccak256** | `viem` |
+| Mots de passe (MOCK Swissquote) | **scrypt** avec sel, jetons et défis aléatoires (`randomBytes`) | Node.js (module standard) |
+
+**Sécurité du transport : limite du prototype.** Les échanges entre l'application, le coordinateur et le faux serveur Swissquote se font en **HTTP sur la machine locale** (pas de TLS), et le **TLS mutuel (mTLS)** entre services n'est **pas** implémenté. L'intégrité des opérations repose sur les **signatures** (les approbations sont signées ; le serveur Swissquote reconstruit lui-même l'opération avant de signer), pas sur le canal. Les échanges avec ZeroDev passent en HTTPS.
+**En production** : TLS partout, **mTLS** entre le service gardien de Swissquote et le coordinateur, clé du gardien dans un **HSM / KMS** (aujourd'hui : un fichier local), authentification des gardiens et de l'agent, limitation de débit et journaux d'audit.
+
 ## 11. Outils d'IA utilisés
 | Outil | Usage |
 |---|---|

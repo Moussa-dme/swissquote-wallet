@@ -29,6 +29,17 @@ flowchart LR
     COORD -->|"2 gardiens sur 3 finalisent"| CHAIN
 ```
 
+### Le brief de chaque boîte (pour les slides)
+| Boîte | À quoi elle sert | Elle parle à |
+|---|---|---|
+| **Le client** | Il possède la **clé** (un passkey) dans la puce de son appareil, protégée par Touch ID. La clé n'en sort jamais. | L'application (il signe) |
+| **Application du wallet** | L'écran du client : wallet, paiements, récupération, mode avancé. Elle prépare les opérations et les fait signer. | Le client, ZeroDev, le coordinateur, Swissquote |
+| **Coordinateur de récupération** *(MOCK)* | Il **relaie** les demandes et les approbations entre les gardiens et **retient les signatures pendant le délai** de sécurité (le propriétaire peut annuler). Il **n'a aucune clé** et ne peut pas signer. | L'application, les gardiens, Swissquote, la blockchain |
+| **Appareil de secours + contact de confiance** *(MOCK)* | Les **gardiens du client** : ils approuvent une récupération, et l'appareil de secours confirme les **gros paiements**. Clés dans le navigateur (production : passkey ou clé matérielle). | Le coordinateur |
+| **Swissquote** *(MOCK, processus séparé)* | **Gardien n°3 : une voix sur trois**, donnée seulement après vérification d'identité **en personne**. Côté banque aussi : comptes clients, contrôle d'adresses, registre de dApps, preuve de propriété (Travel Rule). | Le coordinateur, l'application |
+| **ZeroDev** *(service externe)* | La **technologie** du compte intelligent : serveur de passkeys, envoi des transactions, **paiement des frais** (paymaster). Il **ne peut pas signer** à la place du client. | L'application, la blockchain |
+| **Blockchain (Sepolia)** | Là où vivent les **règles** : le wallet (propriétaire = passkey), le **gardien 2 sur 3**, le module de récupération, l'USDC. C'est elle qui **impose** le 2 sur 3 et refuse l'ancienne clé après récupération. | Tous, via ZeroDev |
+
 **Comment le lire (20 secondes) :** le client signe avec Touch ID. S'il perd son appareil, **deux gardiens sur trois** (son appareil de secours, son contact, ou Swissquote après vérification en personne) approuvent, et la **blockchain** remplace sa clé. **Swissquote seule ne peut rien.**
 
 ## 1. Vue détaillée : qui parle à qui

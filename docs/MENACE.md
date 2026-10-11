@@ -78,7 +78,12 @@ ZeroDev fournit le compte intelligent, le serveur de passkeys, le bundler et le 
 - **Wallets en série** : un attaquant peut créer beaucoup de wallets ; le plafond global limite la perte, et la liaison à un client Swissquote (KYC) la supprimerait.
 - **Registre de dApps** : il est simulé ; la vérification de l'empreinte est réelle, mais ne couvre pas les changements de comportement dus à des données externes (oracles) ni les failles déjà présentes dans le code approuvé.
 
-### 3.10 Autres limites
+### 3.10 Transport et stockage des secrets (limites du prototype)
+- **Pas de TLS ni de mTLS** entre l'application, le coordinateur et le faux serveur Swissquote (HTTP local). L'intégrité vient des **signatures**, pas du canal ; mais une approbation interceptée serait **rejouable** tant que l'état du compte gardien ne change pas (voir 3.5). Production : TLS partout, **mTLS** entre services.
+- **La clé du gardien Swissquote** est dans un fichier local (`data.json`, accès restreint) : en production, **HSM ou KMS**.
+- **Le coordinateur n'authentifie pas ses appelants** : seules les opérations sensibles exigent une signature valide (annulation, confirmation d'un gros paiement). Production : authentification des gardiens et limitation de débit.
+
+### 3.11 Autres limites
 - Une seule famille de blockchains (EVM) avec ce modèle de compte ; le MPC fonctionnerait aussi pour Bitcoin.
 - Pendant le délai, l'**ancienne clé reste valide** : un voleur de téléphone peut agir avant la fin de la récupération ; d'où le plafond et le second appareil.
 - Seuls Safari et Chrome sur `localhost` ont été testés.
