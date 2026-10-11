@@ -252,7 +252,7 @@ Sur la page d'accueil (wallet connecté), dans **« ▼ Mode avancé »**, carte
 *Montre qui paie les frais et comment l'abus est évité.*
 - Dans le **résumé d'un paiement** (« Envoyer des USDC » → **Vérifier**), la ligne « Frais de réseau » affiche **« opérations gratuites aujourd'hui : x/40 »** : chaque wallet a un quota quotidien de transactions sponsorisées.
 - En plus : un **plafond global** par jour (tous clients) et un **plafond de gaz par opération**. Une demande au-delà est refusée avec un message clair (« Quota de transactions gratuites atteint… »).
-- **Quand le quota est épuisé** (ou si tu coches la case) : dans le résumé d'un paiement, la case **« Payer les frais en USDC »** fait payer les frais **par le client**, en USDC (≈ 1 à 1,5 USDC mesurés sur le réseau de test). Il faut alors un solde d'au moins **le montant + 3 USDC**. Le quota gratuit n'est pas consommé.
+- **Quand le quota est épuisé** (ou si tu coches la case) : dans le résumé d'un paiement, la case **« Payer les frais en USDC »** fait payer les frais **par le client**, en USDC (≈ 1 à 1,5 USDC mesurés sur le réseau de test). Il faut alors un solde d'au moins **le montant + 5 USDC**. **Un wallet tout neuf** (jamais utilisé) n'a pas encore été déployé : son **premier envoi est offert** par Swissquote (la case est désactivée avec une explication), car payer ce premier envoi en USDC coûte ≈ 4 USDC ou plus ; la case est disponible ensuite. Le quota gratuit n'est pas consommé.
 - Pour voir les compteurs : `http://localhost:3000/api/gas/usage?address=<adresse du wallet>`.
 
 ---

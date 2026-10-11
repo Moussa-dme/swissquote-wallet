@@ -35,6 +35,15 @@ export async function POST(req: NextRequest) {
 
     const upstream = await fetch(UPSTREAM, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) })
     const out = await upstream.json().catch(() => ({ jsonrpc: "2.0", id: body.id, error: { code: -32000, message: "Réponse illisible du paymaster." } }))
+    // Le paymaster renvoie parfois une erreur sous forme de simple texte (pas du JSON-RPC) : sans traduction,
+    // le client ne voyait que « RPC Request failed ». On la rend lisible.
+    if (typeof out?.error === "string") {
+        const raw: string = out.error
+        const friendly = /postOp reverted|7939f424/i.test(raw)
+            ? "Solde en USDC insuffisant pour payer les frais (le premier envoi d'un wallet neuf, qui le déploie, coûte environ 4 USDC ou plus). Détail : " + raw
+            : raw
+        return rpcError(body.id, friendly.slice(0, 400))
+    }
     // plafond de gaz par opération, vérifié sur la réponse du paymaster
     const r = out?.result
     if (r) {

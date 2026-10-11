@@ -70,9 +70,10 @@ export function kernelClientPayingInUsdc(account: any) {
         getPaymasterData: async (userOperation: any) => pm.sponsorUserOperation({ userOperation, gasToken: GAS_TOKEN } as any)
     }
     const client = createKernelAccountClient({ account, chain: CHAIN, bundlerTransport: http(RPC_URL), paymaster: paymasterUsdc } as any) as any
-    // autorisation donnée au paymaster de prélever jusqu'à 5 USDC de frais pour cette opération.
-    // Mesuré sur Sepolia : une opération avec passkey coûte ≈ 1,5 USDC ; avec 1 USDC d'autorisation, le prélèvement échouait.
-    const approveCall = async () => getERC20PaymasterApproveCall(pm as any, { gasToken: GAS_TOKEN, approveAmount: BigInt(5_000_000), entryPoint } as any)
+    // autorisation donnée au paymaster de prélever jusqu'à 12 USDC de frais pour cette opération.
+    // Mesuré sur Sepolia : ≈ 1,1 à 1,5 USDC pour un wallet déjà déployé, ≈ 4,2 USDC pour la 1re opération d'un wallet
+    // neuf (déploiement inclus, et davantage avec un passkey). Une autorisation trop petite fait échouer le prélèvement.
+    const approveCall = async () => getERC20PaymasterApproveCall(pm as any, { gasToken: GAS_TOKEN, approveAmount: BigInt(12_000_000), entryPoint } as any)
     return { client, approveCall }
 }
 

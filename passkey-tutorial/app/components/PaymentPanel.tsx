@@ -10,8 +10,8 @@ import { SWISSQUOTE_URL, coord, errText, fmtAddr, isObsoleteSignerError, kernelC
 import { SMALL_LIMIT_USDC, USDC, erc20Abi, fromUnits, isLarge, toUnits } from "@/lib/policy"
 import { Btn, Card, Input, MockBadge, Msg, countdown, useNow } from "./ui"
 
-// marge de solde exigée quand les frais sont payés en USDC (frais mesurés ≈ 1,5 USDC)
-const FEE_MARGIN = BigInt(3_000_000)
+// marge de solde exigée quand les frais sont payés en USDC (frais mesurés : ≈ 1,1 à 1,5 USDC ; ≈ 4 USDC et plus pour le 1er envoi d'un wallet neuf)
+const FEE_MARGIN = BigInt(5_000_000)
 
 type Props = { username: string; ready: boolean; account: any; client: any }
 type Preview = {
@@ -27,6 +27,7 @@ export default function PaymentPanel({ username, ready, account, client }: Props
     const [gas, setGas] = useState<any>(null)
     const [copied, setCopied] = useState(false)
     const [payGasUsdc, setPayGasUsdc] = useState(false)
+    const [deployed, setDeployed] = useState<boolean | null>(null)
     const [paymentId, setPaymentId] = useState("")
     const [state, setState] = useState<any>(null)
     const [busy, setBusy] = useState("")
@@ -50,6 +51,13 @@ export default function PaymentPanel({ username, ready, account, client }: Props
         try { setGas(await fetch(`/api/gas/usage?address=${address}`).then((x) => x.json())) } catch {}
     }, [address])
     useEffect(() => { loadGas() }, [loadGas])
+    // Le wallet est-il déjà déployé ? (son 1er envoi le déploie : bien plus cher à payer en USDC)
+    const loadDeployed = useCallback(async () => {
+        if (!address) return
+        try { const c = await publicClient.getCode({ address: address as Address }); setDeployed(Boolean(c && c !== "0x")) } catch {}
+    }, [address])
+    useEffect(() => { loadDeployed() }, [loadDeployed])
+    useEffect(() => { if (deployed === false) setPayGasUsdc(false) }, [deployed])
     const quotaExhausted = Boolean(gas && gas.walletUsed >= gas.walletQuota)
     useEffect(() => { if (quotaExhausted) setPayGasUsdc(true) }, [quotaExhausted])
 
@@ -103,7 +111,7 @@ export default function PaymentPanel({ username, ready, account, client }: Props
             }
             if (paymentId) await coord(`payments/${paymentId}/done`, { txHash: receipt.receipt.transactionHash })
             setMsg({ kind: "ok", text: `✅ ${pv.label} USDC envoyés à ${fmtAddr(pv.to)}. {payGasUsdc ? "Frais payés par toi en USDC." : "Frais payés par Swissquote (gasless)."} Transaction : ${fmtAddr(receipt.receipt.transactionHash)}` })
-            setPreview(null); setPaymentId(""); setAmount(""); loadBalance(); loadGas()
+            setPreview(null); setPaymentId(""); setAmount(""); loadBalance(); loadGas(); loadDeployed()
         } catch (e) {
             if (isObsoleteSignerError(e)) notifyObsolete() // l'ancienne clé est refusée : l'accueil affiche « appareil obsolète »
             setMsg({ kind: "err", text: "Envoi impossible : " + errText(e) })
@@ -163,14 +171,14 @@ export default function PaymentPanel({ username, ready, account, client }: Props
                     <ul className="text-sm space-y-1">
                         <li>• Tu envoies <b>{preview.label} USDC</b> (jetons de test, aucune valeur réelle) à <code>{fmtAddr(preview.to)}</code>.</li>
                         <li>• Solde après : <b>{fromUnits(preview.balance >= preview.units ? preview.balance - preview.units : BigInt(0))} USDC</b>.</li>
-                        <li>• Frais de réseau : {payGasUsdc ? <><b>payés par toi en USDC</b> (≈ 1,5 USDC mesurés sur le réseau de test, prélevés en plus du montant)</> : <><b>0</b> pour toi (payés par Swissquote, « gasless »){gas && <> · opérations gratuites aujourd'hui : <b>{gas.walletUsed}/{gas.walletQuota}</b></>}</>}.</li>
+                        <li>• Frais de réseau : {payGasUsdc ? <><b>payés par toi en USDC</b> (≈ 1,5 USDC, davantage pour un wallet neuf ; prélevés en plus du montant)</> : <><b>0</b> pour toi (payés par Swissquote, « gasless »){gas && <> · opérations gratuites aujourd'hui : <b>{gas.walletUsed}/{gas.walletQuota}</b></>}</>}.</li>
                         <li>• Simulation de la transaction : {preview.simulationOk ? <b className="text-green-400">elle réussirait ✅</b> : <b className="text-red-400">elle échouerait ❌ — {preview.simulationError}</b>}</li>
                         <li>• Contrôle de l'adresse (Swissquote, <MockBadge />) : {preview.flagged ? <b className="text-red-400">⚠️ {preview.flagReason}</b> : <b className="text-green-400">aucun signalement ✅</b>}</li>
                         <li>• Niveau de contrôle : {preview.large ? <b className="text-amber-300">GROS montant → passkey + confirmation de l'appareil de secours</b> : <b>petit montant → passkey seul</b>}</li>
                     </ul>
                     <label className="text-sm flex items-start gap-2">
-                        <input type="checkbox" className="mt-1" checked={payGasUsdc} onChange={(e) => setPayGasUsdc(e.target.checked)} />
-                        <span>Payer les frais en USDC plutôt qu'utiliser l'offre gratuite de Swissquote.{quotaExhausted && <b className="text-amber-300"> Ton quota gratuit du jour est épuisé : c'est la seule option.</b>}</span>
+                        <input type="checkbox" className="mt-1" checked={payGasUsdc} disabled={deployed === false} onChange={(e) => setPayGasUsdc(e.target.checked)} />
+                        <span>Payer les frais en USDC plutôt qu'utiliser l'offre gratuite de Swissquote.{deployed === false && <b className="text-sky-300"> Ton wallet n'est pas encore déployé : ce premier envoi est offert par Swissquote et le déploie ; ensuite tu pourras payer tes frais en USDC.</b>}{quotaExhausted && <b className="text-amber-300"> Ton quota gratuit du jour est épuisé : c'est la seule option.</b>}</span>
                     </label>
                     {preview.flagged && <Msg kind="err">Swissquote te prévient mais ne bloque pas ton paiement : tes fonds restent sous ton seul contrôle. Es-tu certain de vouloir continuer ?</Msg>}
                     {!waiting && (
@@ -178,7 +186,7 @@ export default function PaymentPanel({ username, ready, account, client }: Props
                             {preview.large ? "Demander la confirmation de l'appareil de secours" : "Envoyer (Touch ID)"}
                         </Btn>
                     )}
-                    {preview.balance < preview.units + (payGasUsdc ? FEE_MARGIN : BigInt(0)) && <Msg kind="err">Solde insuffisant{payGasUsdc ? " : pour payer les frais en USDC, il faut le montant plus environ 3 USDC de marge" : ""}.</Msg>}
+                    {preview.balance < preview.units + (payGasUsdc ? FEE_MARGIN : BigInt(0)) && <Msg kind="err">Solde insuffisant{payGasUsdc ? " : pour payer les frais en USDC, il faut le montant plus environ 5 USDC de marge" : ""}.</Msg>}
                 </Card>
             )}
 
