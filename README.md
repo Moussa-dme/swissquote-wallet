@@ -4,6 +4,12 @@
 
 Un wallet crypto dont le client garde les clés (passkey, Touch ID), avec une **récupération par gardiens 2 sur 3** où **Swissquote seule ne peut rien faire**, des paiements contrôlés selon le montant, et une liaison au compte Swissquote qui automatise la preuve de propriété (Travel Rule). Tout tourne sur **Sepolia** (réseau de test, aucun argent réel).
 
+## Démo et présentation
+Tous les fichiers sont dans la **[release v1.0-soumission](https://github.com/Moussa-dme/swissquote-wallet/releases/tag/v1.0-soumission)** :
+- **Présentation (diapositives, PDF)** : [Presentation.Swissquote.Wallet.Hackaton.pdf](https://github.com/Moussa-dme/swissquote-wallet/releases/download/v1.0-soumission/Presentation.Swissquote.Wallet.Hackaton.pdf)
+- **Vidéo de démo : parcours complet** (créer, payer, perdre, récupérer) : [happy_path.mov](https://github.com/Moussa-dme/swissquote-wallet/releases/download/v1.0-soumission/happy_path.mov)
+- **Vidéo de démo : frais payés en USDC** : [USDC_demo_sans_attentes.mp4](https://github.com/Moussa-dme/swissquote-wallet/releases/download/v1.0-soumission/USDC_demo_sans_attentes.mp4)
+
 ## À lire
 | Document | Contenu |
 |---|---|

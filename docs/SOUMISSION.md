@@ -46,15 +46,18 @@ Garder les clients qui partaient, un service de récupération payant, un abonne
 **Claude Code** (Claude Sonnet 5.5) : lecture de la documentation et des SDK, conception et études de faisabilité par scripts, écriture du code, débogage, brouillons de documentation. **[Autres outils du binôme à ajouter.]** Les décisions de conception, les tests avec de vrais passkeys et la validation des cas d'attaque ont été faits par l'équipe.
 
 ## Liens
-- **Code** : <https://github.com/Moussa-dme/swissquote-wallet> *(dépôt à passer en public avant de soumettre, voir la liste en bas)*
-- **Vidéo de démo** : [lien]
+- **Code** : <https://github.com/Moussa-dme/swissquote-wallet> *(dépôt public ✅)*
+- **Release (vidéos et diapositives)** : <https://github.com/Moussa-dme/swissquote-wallet/releases/tag/v1.0-soumission>
+  - Présentation (PDF) : <https://github.com/Moussa-dme/swissquote-wallet/releases/download/v1.0-soumission/Presentation.Swissquote.Wallet.Hackaton.pdf>
+  - Vidéo de démo, parcours complet : <https://github.com/Moussa-dme/swissquote-wallet/releases/download/v1.0-soumission/happy_path.mov>
+  - Vidéo de démo, frais payés en USDC : <https://github.com/Moussa-dme/swissquote-wallet/releases/download/v1.0-soumission/USDC_demo_sans_attentes.mp4>
 - **Documentation** : `README.md`, `docs/PROJET.md`, `docs/ARCHITECTURE.md`, `docs/MENACE.md`, `docs/LEGAL.md`, `docs/BUSINESS.md`, `docs/DEMARRAGE.md`
 
 ## Technologies (aucune cryptographie maison)
 ZeroDev Kernel (ERC-4337), passkeys (WebAuthn), multisig pondéré ZeroDev, paymaster ZeroDev, viem, Next.js, Node.js, Sepolia.
 
 ## À décider avant de soumettre
-- [ ] **Accès au dépôt** : le dépôt est **privé** (un visiteur non connecté voit une erreur 404). Le passer en **public** (Settings → General → Change visibility) ou ajouter les organisateurs en collaborateurs.
+- [x] **Accès au dépôt** : le dépôt est **public** (vérifié : un visiteur non connecté le voit). Le passer en **public** (Settings → General → Change visibility) ou ajouter les organisateurs en collaborateurs.
 - [ ] **Durée et format de la vidéo** (voir le formulaire).
 - [ ] **Langue** : français ou anglais.
 - [ ] Relire une dernière fois que **aucun document** ne contient quelque chose à ne pas publier.
