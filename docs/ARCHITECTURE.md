@@ -4,6 +4,8 @@
 
 ## 0. Version pour la présentation (7 boîtes)
 
+**En une phrase :** le client signe avec Touch ID, et s'il perd son appareil, deux gardiens sur trois (dont Swissquote seulement après une vérification en personne) font remplacer sa clé par la blockchain.
+
 > **À mettre sur les slides.** Vert = réel, orange = simulé (MOCK), bleu = service externe. La vue détaillée est en section 1.
 
 ```mermaid
@@ -43,6 +45,8 @@ flowchart LR
 **Comment le lire (20 secondes) :** le client signe avec Touch ID. S'il perd son appareil, **deux gardiens sur trois** (son appareil de secours, son contact, ou Swissquote après vérification en personne) approuvent, et la **blockchain** remplace sa clé. **Swissquote seule ne peut rien.**
 
 ## 1. Vue détaillée : qui parle à qui
+
+**En une phrase :** la carte complète de tous les composants (pages, services simulés, ZeroDev, contrats) et de qui parle à qui, à garder pour répondre aux questions précises.
 
 ```mermaid
 flowchart LR
@@ -108,6 +112,8 @@ flowchart LR
 
 ## 2. Le wallet : qui contrôle quoi
 
+**En une phrase :** le client signe les paiements avec son passkey, tandis que les gardiens, à deux sur trois, peuvent seulement remplacer sa clé, jamais déplacer ses fonds.
+
 ```mermaid
 flowchart TB
     classDef real fill:#bbf7d0,stroke:#15803d,color:#052e16
@@ -122,6 +128,8 @@ flowchart TB
 La récupération **change la clé qui contrôle le wallet**. L'adresse du wallet et les fonds ne bougent pas.
 
 ## 3. Récupération (séquence)
+
+**En une phrase :** après la perte d'un appareil, le client demande une récupération, le propriétaire est alerté et peut annuler pendant le délai, puis deux gardiens approuvent et la blockchain installe la nouvelle clé en refusant l'ancienne.
 
 ```mermaid
 sequenceDiagram
@@ -152,6 +160,8 @@ sequenceDiagram
 
 ## 4. Paiement : petit ou gros montant
 
+**En une phrase :** chaque paiement passe par un résumé clair, une simulation et un contrôle d'adresse, puis Touch ID seul pour un petit montant, ou Touch ID plus la confirmation d'un second appareil pour un gros montant.
+
 ```mermaid
 flowchart TB
     classDef real fill:#bbf7d0,stroke:#15803d,color:#052e16
@@ -166,6 +176,8 @@ flowchart TB
 ```
 
 ## 5. Liaison au compte Swissquote et Travel Rule
+
+**En une phrase :** le wallet signe un message unique que Swissquote fait vérifier sur la blockchain, ce qui prouve que le wallet appartient au client sans montrer de clé et autorise les retraits de la banque vers ce wallet.
 
 ```mermaid
 sequenceDiagram
@@ -186,6 +198,8 @@ sequenceDiagram
 
 ## 6. Interaction avec une dApp (bonus)
 
+**En une phrase :** avant d'appeler une application, le wallet vérifie qu'elle est approuvée par Swissquote et que son code n'a pas changé, puis bloque, freine ou laisse passer selon le résultat.
+
 ```mermaid
 flowchart TB
     classDef real fill:#bbf7d0,stroke:#15803d,color:#052e16
@@ -202,6 +216,8 @@ flowchart TB
 
 ## 7. Frais sponsorisés : la « gas station »
 
+**En une phrase :** une petite barrière limite les frais offerts par Swissquote (quota par wallet, plafond global, plafond de gaz), et au-delà le client peut payer ses frais en USDC sans coût pour la banque.
+
 ```mermaid
 flowchart LR
     classDef real fill:#bbf7d0,stroke:#15803d,color:#052e16
@@ -215,5 +231,7 @@ flowchart LR
 ```
 
 ## 8. Ce qui est réel, ce qui est simulé
+
+**En une phrase :** le tableau de ce qui est vraiment construit et de ce qui est simulé et étiqueté MOCK, pour que le jury sache exactement ce qui est démontré.
 
 Voir le tableau complet dans `PROJET.md` (section « Ce qui est simulé »).

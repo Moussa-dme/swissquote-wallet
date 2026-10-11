@@ -5,6 +5,7 @@
 <h1>Architecture</h1>
 <p class="note">Brouillon factuel. **Vert = réel** (code ou service qui fonctionne vraiment, sur la blockchain de test Sepolia). **Orange = MOCK** (simulation, clairement étiquetée dans le code et l&#x27;interface). Les schémas s&#x27;affichent directement sur GitHub (format Mermaid) ; pour les slides, on peut les exporter en image avec &lt;https://mermaid.live&gt; (coller le code, « PNG »).</p>
 <h2>0. Version pour la présentation (7 boîtes)</h2>
+<p class="note"><b>En une phrase  :</b> le client signe avec Touch ID, et s&#x27;il perd son appareil, deux gardiens sur trois (dont Swissquote seulement après une vérification en personne) font remplacer sa clé par la blockchain.</p>
 <p class="note">**À mettre sur les slides.** Vert = réel, orange = simulé (MOCK), bleu = service externe. La vue détaillée est en section 1.</p>
 <pre class="mermaid">flowchart LR
     classDef real fill:#bbf7d0,stroke:#15803d,color:#052e16
@@ -27,8 +28,9 @@
     SQ --&gt;|&quot;approuve après vérification en personne&quot;| COORD
     COORD --&gt;|&quot;2 gardiens sur 3 finalisent&quot;| CHAIN
 </pre>
-<p class="note">Comment le lire (20 secondes) : le client signe avec Touch ID. S&#x27;il perd son appareil, deux gardiens sur trois (son appareil de secours, son contact, ou Swissquote après vérification en personne) approuvent, et la blockchain remplace sa clé. Swissquote seule ne peut rien.</p>
+<p class="note"><b>Comment le lire (20 secondes)  :</b> le client signe avec Touch ID. S&#x27;il perd son appareil, deux gardiens sur trois (son appareil de secours, son contact, ou Swissquote après vérification en personne) approuvent, et la blockchain remplace sa clé. Swissquote seule ne peut rien.</p>
 <h2>1. Vue détaillée : qui parle à qui</h2>
+<p class="note"><b>En une phrase  :</b> la carte complète de tous les composants (pages, services simulés, ZeroDev, contrats) et de qui parle à qui, à garder pour répondre aux questions précises.</p>
 <pre class="mermaid">flowchart LR
     classDef real fill:#bbf7d0,stroke:#15803d,color:#052e16
     classDef mock fill:#fde68a,stroke:#b45309,color:#451a03
@@ -79,6 +81,7 @@
     SQB -.-&gt;|&quot;vérifie la signature du wallet (ERC-1271)&quot;| ACCOUNT
 </pre>
 <h2>2. Le wallet : qui contrôle quoi</h2>
+<p class="note"><b>En une phrase  :</b> le client signe les paiements avec son passkey, tandis que les gardiens, à deux sur trois, peuvent seulement remplacer sa clé, jamais déplacer ses fonds.</p>
 <pre class="mermaid">flowchart TB
     classDef real fill:#bbf7d0,stroke:#15803d,color:#052e16
     classDef mock fill:#fde68a,stroke:#b45309,color:#451a03
@@ -89,6 +92,7 @@
     S[&quot;Swissquote (MOCK)&lt;br/&gt;après vérification en personne&quot;]:::mock --&gt; G
 </pre>
 <h2>3. Récupération (séquence)</h2>
+<p class="note"><b>En une phrase  :</b> après la perte d&#x27;un appareil, le client demande une récupération, le propriétaire est alerté et peut annuler pendant le délai, puis deux gardiens approuvent et la blockchain installe la nouvelle clé en refusant l&#x27;ancienne.</p>
 <pre class="mermaid">sequenceDiagram
     autonumber
     actor Client as Client (nouvel appareil)
@@ -115,6 +119,7 @@
     Client-&gt;&gt;Chain: signe avec le NOUVEAU passkey ✅ (l&#x27;ancien est refusé)
 </pre>
 <h2>4. Paiement : petit ou gros montant</h2>
+<p class="note"><b>En une phrase  :</b> chaque paiement passe par un résumé clair, une simulation et un contrôle d&#x27;adresse, puis Touch ID seul pour un petit montant, ou Touch ID plus la confirmation d&#x27;un second appareil pour un gros montant.</p>
 <pre class="mermaid">flowchart TB
     classDef real fill:#bbf7d0,stroke:#15803d,color:#052e16
     classDef mock fill:#fde68a,stroke:#b45309,color:#451a03
@@ -127,6 +132,7 @@
     TOUCH --&gt; SEND[&quot;Transaction signée et envoyée&lt;br/&gt;frais payés par le paymaster&quot;]:::real
 </pre>
 <h2>5. Liaison au compte Swissquote et Travel Rule</h2>
+<p class="note"><b>En une phrase  :</b> le wallet signe un message unique que Swissquote fait vérifier sur la blockchain, ce qui prouve que le wallet appartient au client sans montrer de clé et autorise les retraits de la banque vers ce wallet.</p>
 <pre class="mermaid">sequenceDiagram
     autonumber
     actor Client
@@ -143,6 +149,7 @@
     Note over SQ: un retrait depuis le compte Swissquote&lt;br/&gt;n&#x27;est autorisé QUE vers un wallet dont la propriété est prouvée
 </pre>
 <h2>6. Interaction avec une dApp (bonus)</h2>
+<p class="note"><b>En une phrase  :</b> avant d&#x27;appeler une application, le wallet vérifie qu&#x27;elle est approuvée par Swissquote et que son code n&#x27;a pas changé, puis bloque, freine ou laisse passer selon le résultat.</p>
 <pre class="mermaid">flowchart TB
     classDef real fill:#bbf7d0,stroke:#15803d,color:#052e16
     classDef mock fill:#fde68a,stroke:#b45309,color:#451a03
@@ -156,6 +163,7 @@
     C --&gt;|&quot;même adresse, code changé&quot;| X[&quot;Appel bloqué par le wallet&quot;]:::bad
 </pre>
 <h2>7. Frais sponsorisés : la « gas station »</h2>
+<p class="note"><b>En une phrase  :</b> une petite barrière limite les frais offerts par Swissquote (quota par wallet, plafond global, plafond de gaz), et au-delà le client peut payer ses frais en USDC sans coût pour la banque.</p>
 <pre class="mermaid">flowchart LR
     classDef real fill:#bbf7d0,stroke:#15803d,color:#052e16
     classDef mock fill:#fde68a,stroke:#b45309,color:#451a03
@@ -167,5 +175,6 @@
     G --&gt;|&quot;plafond de gaz ou plafond global dépassé&quot;| N[&quot;Refusé : réessayer plus tard&quot;]:::real
 </pre>
 <h2>8. Ce qui est réel, ce qui est simulé</h2>
+<p class="note"><b>En une phrase  :</b> le tableau de ce qui est vraiment construit et de ce qui est simulé et étiqueté MOCK, pour que le jury sache exactement ce qui est démontré.</p>
 <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,theme:"neutral",flowchart:{htmlLabels:true,useMaxWidth:true},sequence:{useMaxWidth:true}});</script>
 </body></html>
