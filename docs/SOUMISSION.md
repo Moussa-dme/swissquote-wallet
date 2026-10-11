@@ -46,7 +46,7 @@ Garder les clients qui partaient, un service de récupération payant, un abonne
 **Claude Code** (Claude Sonnet 5.5) : lecture de la documentation et des SDK, conception et études de faisabilité par scripts, écriture du code, débogage, brouillons de documentation. **[Autres outils du binôme à ajouter.]** Les décisions de conception, les tests avec de vrais passkeys et la validation des cas d'attaque ont été faits par l'équipe.
 
 ## Liens
-- **Code** : [lien du dépôt GitHub : à rendre accessible aux organisateurs, voir ci-dessous]
+- **Code** : <https://github.com/Moussa-dme/swissquote-wallet> *(dépôt à passer en public avant de soumettre, voir la liste en bas)*
 - **Vidéo de démo** : [lien]
 - **Documentation** : `README.md`, `docs/PROJET.md`, `docs/ARCHITECTURE.md`, `docs/MENACE.md`, `docs/LEGAL.md`, `docs/BUSINESS.md`, `docs/DEMARRAGE.md`
 
@@ -54,7 +54,8 @@ Garder les clients qui partaient, un service de récupération payant, un abonne
 ZeroDev Kernel (ERC-4337), passkeys (WebAuthn), multisig pondéré ZeroDev, paymaster ZeroDev, viem, Next.js, Node.js, Sepolia.
 
 ## À décider avant de soumettre
-- [ ] **Accès au dépôt** : le dépôt est **privé**. Le passer en **public** (Settings → General → Change visibility) ou ajouter les organisateurs en collaborateurs.
+- [ ] **Accès au dépôt** : le dépôt est **privé** (un visiteur non connecté voit une erreur 404). Le passer en **public** (Settings → General → Change visibility) ou ajouter les organisateurs en collaborateurs.
 - [ ] **Durée et format de la vidéo** (voir le formulaire).
 - [ ] **Langue** : français ou anglais.
 - [ ] Relire une dernière fois que **aucun document** ne contient quelque chose à ne pas publier.
+- [ ] Après l'avoir passé en public, **ouvrir le lien dans une fenêtre privée** pour vérifier qu'il s'affiche.
