@@ -6,7 +6,7 @@
 //   4. contrôles renforcés : application inconnue => confirmation du SECOND APPAREIL ; code changé => refus.
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { Address, encodeFunctionData, isAddress } from "viem"
-import { coord, errText, fmtAddr, publicClient } from "@/lib/recovery"
+import { coord, errText, fmtAddr, isObsoleteSignerError, notifyObsolete, publicClient } from "@/lib/recovery"
 import { DappCheck, DappEntry, checkDapp, dappAbi, loadRegistry } from "@/lib/dapps"
 import { Btn, Card, Input, MockBadge, Msg, countdown, useNow } from "./ui"
 
@@ -65,7 +65,10 @@ export default function DappPanel({ username, ready, account, client }: Props) {
             if (paymentId) await coord(`payments/${paymentId}/done`, { txHash: receipt.receipt.transactionHash })
             setMsg({ kind: "ok", text: `✅ Application appelée (${check.entry?.name ?? fmtAddr(target)}). Transaction : ${fmtAddr(receipt.receipt.transactionHash)}` })
             setCheck(null); setSim(null); setPaymentId("")
-        } catch (e) { setMsg({ kind: "err", text: "Appel impossible : " + errText(e) }) }
+        } catch (e) {
+            if (isObsoleteSignerError(e)) notifyObsolete()
+            setMsg({ kind: "err", text: "Appel impossible : " + errText(e) })
+        }
         setBusy(""); sending.current = false
     }
 

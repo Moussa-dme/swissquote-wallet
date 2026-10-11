@@ -17,7 +17,7 @@ import { createPublicClient, http, parseAbi, encodeFunctionData } from "viem"
 import { sepolia } from "viem/chains"
 import OwnerRecoveryPanel from "./components/OwnerRecoveryPanel"
 import { Btn, Card, Input, Msg, Pill } from "./components/ui"
-import { coord, fmtAddr, gasStationUrl } from "@/lib/recovery"
+import { coord, fmtAddr, gasStationUrl, isObsoleteSignerError } from "@/lib/recovery"
 import PaymentPanel from "./components/PaymentPanel"
 import SwissquoteLinkPanel from "./components/SwissquoteLinkPanel"
 import DappPanel from "./components/DappPanel"
@@ -66,6 +66,7 @@ export default function Home() {
     const [userOpHash, setUserOpHash] = useState("")
     const [userOpStatus, setUserOpStatus] = useState("")
     const [advanced, setAdvanced] = useState(false)
+    const [sigInvalid, setSigInvalid] = useState(false)
     const advancedRef = useRef<HTMLDivElement>(null)
     const [protection, setProtection] = useState<any>(null)
     const [copied, setCopied] = useState(false)
@@ -195,7 +196,8 @@ export default function Home() {
             setIsSendingUserOp(false)
         } catch (e: any) {
             console.error("Send UserOp failed:", e)
-            window.alert("Send UserOp failed: " + describeError(e))
+            if (isObsoleteSignerError(e)) setSigInvalid(true) // l'ancienne clé est refusée : message plein écran
+            else window.alert("Send UserOp failed: " + describeError(e))
             setIsSendingUserOp(false)
             setUserOpStatus("")
         }
@@ -222,6 +224,13 @@ export default function Home() {
         setTimeout(() => advancedRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150)
     }
 
+    // une autre partie de l'app (paiement, dApp) a vu la blockchain refuser la signature de cet appareil
+    useEffect(() => {
+        const h = () => setSigInvalid(true)
+        window.addEventListener("wallet-obsolete", h)
+        return () => window.removeEventListener("wallet-obsolete", h)
+    }, [])
+
     const copyAddress = async () => {
         try { await navigator.clipboard.writeText(accountAddress); setCopied(true); setTimeout(() => setCopied(false), 1500) } catch {}
     }
@@ -230,6 +239,13 @@ export default function Home() {
 
     const connected = isKernelClientReady
     const protectedWallet = Boolean(protection?.setup)
+    // Appareil obsolète : le wallet a été récupéré ailleurs (demande exécutée pour CETTE adresse),
+    // ou la blockchain vient de refuser la signature de cet appareil.
+    const recoveredElsewhere = Boolean(
+        accountAddress && protection?.setup?.account?.toLowerCase() === accountAddress.toLowerCase() &&
+        (protection?.requests ?? []).some((r: any) => r.status === "executed")
+    )
+    const obsolete = connected && (recoveredElsewhere || sigInvalid)
     const busyAuth = isRegistering || isLoggingIn
 
     return (
@@ -262,6 +278,18 @@ export default function Home() {
                             <a className="text-sky-300 hover:text-sky-200" href="/recover">J'ai perdu mon appareil</a>
                             <a className="text-sky-300 hover:text-sky-200" href="/guardian">Je suis un gardien</a>
                         </div>
+                    </Card>
+                ) : obsolete ? (
+                    /* ---------- Appareil obsolète : on enlève tout et on affiche un gros message ---------- */
+                    <Card tone="warn">
+                        <h2 className="text-3xl font-bold leading-tight">⛔ Appareil obsolète pour ce wallet</h2>
+                        <p className="text-base text-slate-100">
+                            Le wallet de <b>{username}</b> a été <b>récupéré sur un autre appareil</b> : sa clé a été <b>remplacée</b>.
+                            Cet appareil n'a donc <b>plus aucun pouvoir</b> sur ce wallet : toute signature serait refusée par la blockchain.
+                        </p>
+                        <p className="text-sm text-slate-300"><b>Reconnexion nécessaire</b> avec le nouveau passkey, depuis l'appareil qui a lancé la récupération.</p>
+                        <a href="/recover" className="block text-center px-4 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-white text-sm font-medium">Retrouver mon wallet (écran de récupération)</a>
+                        <Btn tone="gray" onClick={() => window.location.reload()}>Fermer cette session</Btn>
                     </Card>
                 ) : (
                     <>
@@ -306,18 +334,18 @@ export default function Home() {
 
                         {/* ---------- Mode avancé ---------- */}
                         <button className="w-full text-sm text-sky-300 hover:text-sky-200 py-2" onClick={() => setAdvanced(!advanced)}>
-                            {advanced ? "▲ Masquer le mode avancé" : "▼ Mode avancé : récupération, compte Swissquote"}
+                            {advanced ? "▲ Masquer le mode avancé" : "▼ Mode avancé : transaction de test, récupération, compte Swissquote, applications"}
                         </button>
                         {advanced && (
                             <div className="space-y-4 scroll-mt-4" ref={advancedRef}>
-                                <OwnerRecoveryPanel username={username} accountAddress={accountAddress} ready={isKernelClientReady} kernelClient={kernelClient} kernelAccount={kernelAccount} />
-                                <SwissquoteLinkPanel ready={isKernelClientReady} account={kernelAccount} />
-                                <DappPanel username={username} ready={isKernelClientReady} account={kernelAccount} client={kernelClient} />
                                 <Card title="Transaction de test">
                                     <p className="text-sm text-slate-300">Envoie une vraie transaction sans frais (création d'un jeton de test).</p>
                                     <Btn tone="green" onClick={handleSendUserOp} busy={isSendingUserOp}>Envoyer une transaction de test</Btn>
                                     {userOpHash && <div className="text-sm" dangerouslySetInnerHTML={{ __html: userOpStatus }} />}
                                 </Card>
+                                <OwnerRecoveryPanel username={username} accountAddress={accountAddress} ready={isKernelClientReady} kernelClient={kernelClient} kernelAccount={kernelAccount} />
+                                <SwissquoteLinkPanel ready={isKernelClientReady} account={kernelAccount} />
+                                <DappPanel username={username} ready={isKernelClientReady} account={kernelAccount} client={kernelClient} />
                                 <Card title="Autres écrans de la démo">
                                     <ul className="text-sm space-y-1 text-slate-300">
                                         <li><a className="text-sky-300 hover:text-sky-200" href="/guardian" target="_blank">Gardien</a> : appareil de secours ou contact de confiance</li>

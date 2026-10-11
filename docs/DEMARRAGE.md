@@ -154,7 +154,7 @@ Tu dois lire : `MOCK Swissquote sur http://localhost:4000 — gardien : 0x…`. 
 ### Étape 5 : « j'ai perdu mon appareil » (Navigateur B, nouvel onglet)
 
 1. Ouvre `http://localhost:3000/recover`.
-2. Écris `Alice`. La page affiche le wallet à récupérer.
+2. Un écran **neutre** te demande **« Quel wallet veux-tu récupérer ? »** (jamais prérempli). Écris `Alice` et clique sur **Continuer** : la page charge **uniquement** les données d'Alice et affiche le wallet à récupérer. *Si une récupération était déjà en cours pour Alice (par exemple après un rafraîchissement), elle est **reprise** là où elle en est. Le bouton **Changer d'utilisateur** est visible en haut à tout moment et ne supprime aucune donnée.*
 3. Clique sur **Créer un nouveau passkey et demander la récupération** (Touch ID). C'est le **nouvel appareil**.
 4. Tu vois « Demande … en cours » et un **compte à rebours** de 60 s.
 
@@ -191,7 +191,7 @@ Tu peux tester **deux variantes**. Fais-les sur des noms différents.
 
 ### Étape 9 : vérifier que l'ancien appareil est bloqué (Navigateur A)
 
-Retourne sur `http://localhost:3000` (navigateur A), ouvre **« ▼ Mode avancé »** et clique sur **Envoyer une transaction de test** : tu dois obtenir une erreur **« Signature provided for the User Operation is invalid »**. C'est **la bonne nouvelle** : l'ancien appareil n'a plus aucun pouvoir.
+Retourne sur `http://localhost:3000` (navigateur A), ouvre **« ▼ Mode avancé »** et clique sur **Envoyer une transaction de test** : tu dois voir un **gros message plein écran « ⛔ Appareil obsolète pour ce wallet »** (le wallet a été récupéré ailleurs, sa clé a été remplacée, reconnexion nécessaire), à la place de tout le reste. L'application détecte soit la demande exécutée, soit le refus de la blockchain (« Signature invalide »). C'est **la bonne nouvelle** : l'ancien appareil n'a plus aucun pouvoir.
 
 ---
 
@@ -296,7 +296,7 @@ Pendant que tu testes, note :
 | « Serveur Swissquote injoignable » | Le terminal 2 n'est pas lancé | Relance la commande de l'étape 4 (terminal 2) |
 | Erreur « userOp did not match any gas sponsoring policies » | Le paymaster refuse de payer | Dashboard ZeroDev → Gas Policies → active **Sponsor all transactions** (réseau Sepolia) |
 | « HTTP request failed » | Adresse mal copiée dans `.env.local` | Recopie les 3 adresses, sans guillemets, puis **arrête et relance** `npm run dev` |
-| **« Signature provided for the User Operation is invalid »** sur le **nouvel** appareil | Tu as choisi le **mauvais passkey** dans la liste proposée par le navigateur | Choisis celui qui s'appelle `<nom>-recovered-…`, pas celui qui s'appelle juste `<nom>` |
+| **« Signature provided for the User Operation is invalid »** sur le **nouvel** appareil (sur l'**ancien**, c'est normal : il affiche « Appareil obsolète ») | Tu as choisi le **mauvais passkey** dans la liste proposée par le navigateur | Choisis celui qui s'appelle `<nom>-recovered-…`, pas celui qui s'appelle juste `<nom>` |
 | Pas de fenêtre Touch ID | Navigateur ou profil qui ne gère pas les passkeys | Essaie un autre navigateur, ou un profil non privé |
 | « Finaliser » est grisé | Le délai n'est pas écoulé, ou il manque l'approbation d'un autre gardien | Attends la fin du compte à rebours ; vérifie « Approbations : 1/3 » ou plus |
 | La page est blanche / une erreur rouge s'affiche | Le serveur a redémarré | Rafraîchis la page (⌘ + R) ; sinon relance `npm run dev` |

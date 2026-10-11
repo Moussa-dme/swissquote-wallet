@@ -76,6 +76,11 @@ export function kernelClientPayingInUsdc(account: any) {
     return { client, approveCall }
 }
 
+// L'ancien appareil d'un wallet récupéré : la blockchain refuse sa signature (AA24 / signature invalide).
+export const isObsoleteSignerError = (e: any) =>
+    /AA24|Signature provided for the User Operation is invalid/i.test([e?.details, e?.shortMessage, e?.message, e?.cause?.message].map((x) => String(x ?? "")).join(" "))
+export const notifyObsolete = () => { try { window.dispatchEvent(new Event("wallet-obsolete")) } catch {} }
+
 // Message d'erreur lisible, sans fuite du Project ID
 export const errText = (e: any) =>
     String(e?.details ?? e?.shortMessage ?? e?.message ?? e)

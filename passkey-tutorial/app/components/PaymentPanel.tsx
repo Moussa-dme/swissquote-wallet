@@ -6,7 +6,7 @@
 // destinataire par Swissquote (MOCK) qui AVERTIT mais ne bloque jamais (aucun pouvoir sur les fonds).
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { Address, encodeFunctionData, isAddress } from "viem"
-import { SWISSQUOTE_URL, coord, errText, fmtAddr, kernelClientPayingInUsdc, publicClient } from "@/lib/recovery"
+import { SWISSQUOTE_URL, coord, errText, fmtAddr, isObsoleteSignerError, kernelClientPayingInUsdc, notifyObsolete, publicClient } from "@/lib/recovery"
 import { SMALL_LIMIT_USDC, USDC, erc20Abi, fromUnits, isLarge, toUnits } from "@/lib/policy"
 import { Btn, Card, Input, MockBadge, Msg, countdown, useNow } from "./ui"
 
@@ -25,6 +25,7 @@ export default function PaymentPanel({ username, ready, account, client }: Props
     const [balance, setBalance] = useState<bigint | null>(null)
     const [preview, setPreview] = useState<Preview | null>(null)
     const [gas, setGas] = useState<any>(null)
+    const [copied, setCopied] = useState(false)
     const [payGasUsdc, setPayGasUsdc] = useState(false)
     const [paymentId, setPaymentId] = useState("")
     const [state, setState] = useState<any>(null)
@@ -34,6 +35,9 @@ export default function PaymentPanel({ username, ready, account, client }: Props
     const now = useNow()
     const address: string = account?.address ?? ""
 
+    const copyAddress = async () => {
+        try { await navigator.clipboard.writeText(address); setCopied(true); setTimeout(() => setCopied(false), 1500) } catch {}
+    }
     const loadBalance = useCallback(async () => {
         if (!address) return
         try { setBalance(await publicClient.readContract({ address: USDC, abi: erc20Abi, functionName: "balanceOf", args: [address as Address] }) as bigint) } catch {}
@@ -100,7 +104,10 @@ export default function PaymentPanel({ username, ready, account, client }: Props
             if (paymentId) await coord(`payments/${paymentId}/done`, { txHash: receipt.receipt.transactionHash })
             setMsg({ kind: "ok", text: `✅ ${pv.label} USDC envoyés à ${fmtAddr(pv.to)}. {payGasUsdc ? "Frais payés par toi en USDC." : "Frais payés par Swissquote (gasless)."} Transaction : ${fmtAddr(receipt.receipt.transactionHash)}` })
             setPreview(null); setPaymentId(""); setAmount(""); loadBalance(); loadGas()
-        } catch (e) { setMsg({ kind: "err", text: "Envoi impossible : " + errText(e) }) }
+        } catch (e) {
+            if (isObsoleteSignerError(e)) notifyObsolete() // l'ancienne clé est refusée : l'accueil affiche « appareil obsolète »
+            setMsg({ kind: "err", text: "Envoi impossible : " + errText(e) })
+        }
         setBusy(""); sending.current = false
     }
 
@@ -128,6 +135,10 @@ export default function PaymentPanel({ username, ready, account, client }: Props
     const waiting = payment?.status === "pending"
     return (
         <Card title={`Envoyer des USDC (petit ≤ ${SMALL_LIMIT_USDC} · gros > ${SMALL_LIMIT_USDC})`}>
+            <p className="text-sm flex items-center justify-between gap-2">
+                <span className="text-slate-300">Adresse du wallet : <code>{fmtAddr(address)}</code></span>
+                <button className="text-sky-300 hover:text-sky-200" onClick={copyAddress}>{copied ? "copié ✓" : "copier l'adresse"}</button>
+            </p>
             <p className="text-sm">
                 Solde du wallet : <b>{balance === null ? "…" : fromUnits(balance)} USDC</b>{" "}
                 <button className="underline text-blue-400" onClick={loadBalance}>actualiser</button>
